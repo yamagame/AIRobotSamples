@@ -3,21 +3,21 @@ const speech = require('@google-cloud/speech')();
 const mic = require('mic');
 
 function Speech() {
-	var t = new EventEmitter();
-	t.recording = true;
+  var t = new EventEmitter();
+  t.recording = true;
 
   const requestOpts = {
     config: {
       encoding: 'LINEAR16',
       sampleRateHertz: 16000,
       languageCode: 'ja-JP',
-      maxAlternatives: 30,
+      maxAlternatives: 3,
     },
     interimResults: false // If you want interim results, set this to true
   };
 
   var micInstance = mic({
-    'device':'plughw:1,0',
+    'device': 'plughw:1,0',
     'rate': '16000',
     'channels': '1',
     'debug': false,
@@ -27,7 +27,7 @@ function Speech() {
 
   var recognizeStream = null;
 
-  micInputStream.on('data', function(data) {
+  micInputStream.on('data', function (data) {
     if (micInputStream.incrConsecSilenceCount() > micInputStream.getNumSilenceFramesExitThresh()) {
       if (recognizeStream) {
         recognizeStream.end();
@@ -36,60 +36,60 @@ function Speech() {
     } else {
       if (recognizeStream == null) {
         recognizeStream = speech.streamingRecognize(requestOpts)
-        .on('error', console.error)
-        .on('data', (data) => {
-        	if (!t.recording) return;
-          if (data.results[0] && data.results[0].alternatives[0]) {
-            const alternatives = data.results[0].alternatives.map( v => v );
-            const sentence = alternatives.shift();
-            t.emit('data', sentence.transcript);
-          }
-        })
+          .on('error', console.error)
+          .on('data', (data) => {
+            if (!t.recording) return;
+            if (data.results[0] && data.results[0].alternatives[0]) {
+              const alternatives = data.results[0].alternatives.map(v => v);
+              const sentence = alternatives.shift();
+              t.emit('data', sentence.transcript);
+            }
+          })
       }
-      	if (t.recording) {
-	        recognizeStream.write(data);
-      	}
+      if (t.recording) {
+        recognizeStream.write(data);
+      }
     }
   })
 
-  micInputStream.on('error', function(err) {
+  micInputStream.on('error', function (err) {
     console.log("Error in Input Stream: " + err);
   });
 
-  micInputStream.on('startComplete', function() {
+  micInputStream.on('startComplete', function () {
     console.log("Got SIGNAL startComplete");
   });
 
-  micInputStream.on('stopComplete', function() {
+  micInputStream.on('stopComplete', function () {
     console.log("Got SIGNAL stopComplete");
   });
 
-  micInputStream.on('pauseComplete', function() {
+  micInputStream.on('pauseComplete', function () {
     console.log("Got SIGNAL pauseComplete");
   });
 
-  micInputStream.on('resumeComplete', function() {
+  micInputStream.on('resumeComplete', function () {
     console.log("Got SIGNAL resumeComplete");
   });
 
-  micInputStream.on('silence', function() {
+  micInputStream.on('silence', function () {
     console.log("Got SIGNAL silence");
   });
 
-  micInputStream.on('processExitComplete', function() {
+  micInputStream.on('processExitComplete', function () {
     console.log("Got SIGNAL processExitComplete");
   });
 
   micInstance.start();
-	
-	return t;
+
+  return t;
 }
 
 const sp = Speech();
 module.exports = sp;
 
 if (require.main === module) {
-  sp.on('data', function(data) {
+  sp.on('data', function (data) {
     console.log(data);
   });
 }

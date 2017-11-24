@@ -36,9 +36,23 @@ function startServer() {
   server.on('message', (data, rinfo) => {
     console.log(`server got: ${data} from ${rinfo.address}:${rinfo.port}`);
     try {
-      mode = data;
-      server.send(data, 0, data.length, rinfo.port, rinfo.address, (err) => {
-      });
+      if (data == 'talk' || data == 'idle') {
+        mode = data;
+      } else {
+        action.idle(data);
+      }
+      
+      function change(state) {
+        if (state == 'talking') {
+          server.send(data, 0, data.length, rinfo.port, rinfo.address, (err) => {
+          });
+          action.removeListener('talk', change);
+        } else {
+          console.log('centering');
+        }
+      }
+      action.on('talk', change);
+
     } catch(err) {
     }
   });

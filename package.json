@@ -6,6 +6,8 @@
   "dependencies": {
     "@google-cloud/speech": "^0.10.3",
     "aws-iot-device-sdk": "^2.1.0",
+    "body-parser": "^1.18.2",
+    "express": "^4.16.2",
     "mecab-async": "^0.1.2",
     "mic": "^2.1.2",
     "raspi": "^5.0.1",

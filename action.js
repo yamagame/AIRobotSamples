@@ -18,6 +18,7 @@ function Servo(center) {
   var t = new EventEmitter();
 
   t.center = center;
+  t.initialCenter = center;
   t.target = center;
   t.now = center;
   t.speed = 0.08;
@@ -38,20 +39,44 @@ function Servo(center) {
 }
 
 function Action(servo0, servo1) {
-  var t = {}
+  var t = new EventEmitter();
 
   t.servo0 = servo0;
   t.servo1 = servo1;
   t.wait = 120;
   t.talkstep = 0;
   t.talkcount = 0;
+  t.mode = 'idle';
+  t.state = 'idle';
+  
+  t.setState = function(mode, state) {
+    if (t.mode != mode || t.state != state) {
+      t.mode = mode;
+      t.state = state;
+      t.emit(mode, state);
+    }
+  }
 
   t.idle = function (mode) {
     const u0 = this.servo0.update();
     const u1 = this.servo1.update();
 
+    if (mode == 'left') {
+      this.servo1.center = 0.053;
+      return;
+    } else
+    if (mode == 'right') {
+      this.servo1.center = 0.093;
+      return;
+    } else
+    if (mode == 'center') {
+      this.servo1.center = this.servo1.initialCenter;
+      return;
+    }
+
     if (u0 == false && u1 == false) {
       if (mode == 'idle') {
+        this.setState(mode, 'idle');
         this.servo0.speed = 0.08;
         this.servo1.speed = 0.08;
         this.wait--;
@@ -59,22 +84,22 @@ function Action(servo0, servo1) {
           this.wait = 60 + Math.random() * 120;
           const m = Math.floor(Math.random() * 3);
           if (m == 0) {
-            if (abs(this.servo0.target - this.servo0.center) > 0.001) {
-              this.servo0.target = this.servo0.center;
+            if (abs(this.servo0.target - this.servo0.initialCenter) > 0.001) {
+              this.servo0.target = this.servo0.initialCenter;
             } else
-              if (abs(this.servo1.target - this.servo1.center) < 0.001) {
-                this.servo1.target = this.servo1.center + Math.random() * 0.05 - 0.025;
+              if (abs(this.servo1.target - this.servo1.initialCenter) < 0.001) {
+                this.servo1.target = this.servo1.initialCenter + Math.random() * 0.05 - 0.025;
               } else {
-                this.servo1.target = this.servo1.center;
+                this.servo1.target = this.servo1.initialCenter;
               }
           } else
             if (m == 1) {
-              this.servo0.target = this.servo0.center + Math.random() * 0.015 - 0.0075;
+              this.servo0.target = this.servo0.initialCenter + Math.random() * 0.015 - 0.0075;
             } else {
-              if (abs(this.servo0.target - this.servo0.center) > 0.001) {
-                this.servo0.target = this.servo0.center;
+              if (abs(this.servo0.target - this.servo0.initialCenter) > 0.001) {
+                this.servo0.target = this.servo0.initialCenter;
               } else {
-                this.servo1.target = this.servo1.center + Math.random() * 0.05 - 0.025;
+                this.servo1.target = this.servo1.initialCenter + Math.random() * 0.05 - 0.025;
               }
             }
         }
@@ -88,7 +113,9 @@ function Action(servo0, servo1) {
           if (abs(this.servo1.target - this.servo1.center) > 0.001) {
             this.servo0.target = this.servo0.center;
             this.servo1.target = this.servo1.center;
+            this.setState(mode, 'centering');
           } else {
+            this.setState(mode, 'talking');
             this.servo0.speed = 0.1;
             switch (this.talkstep) {
               case 0:

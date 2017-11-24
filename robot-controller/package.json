@@ -1,0 +1,16 @@
+{
+  "name": "robot-controller",
+  "version": "1.0.0",
+  "description": "",
+  "node-red": {
+    "nodes": {
+      "robot-controller": "robot-controller.js"
+    }
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "request": "^2.83.0"
+  }
+}

@@ -1,0 +1,240 @@
+<script type="text/javascript">
+  (function () {
+
+    RED.nodes.registerType('text-to-speech', {
+      category: 'robot',
+      color: '#a6bbcf',
+      defaults: {
+        name: { value: "", },
+        direction: { value: "center", },
+      },
+      inputs: 1,
+      outputs: 1,
+      icon: "feed.png",
+      label: function () {
+        return this.name || "text-to-speech";
+      }
+    });
+
+    RED.nodes.registerType('speech-to-text', {
+      category: 'robot',
+      color: '#a6bbcf',
+      defaults: {
+        name: { value: "", },
+        timeout: { value: 30000, validate: RED.validators.number() },
+      },
+      inputs: 1,
+      outputs: 1,
+      icon: "feed.png",
+      label: function () {
+        return this.name || "speech-to-text";
+      }
+    });
+
+    RED.nodes.registerType('robot-listener', {
+      category: 'robot',
+      color: '#a6bbcf',
+      defaults: {
+        host: { value: "http://localhost:3090", required: true, },
+      },
+      inputs: 1,
+      outputs: 1,
+      label: function () {
+        return this.host;
+      },
+      oneditprepare: function () {
+      }
+    });
+
+    RED.nodes.registerType('utterance', {
+      category: 'robot',
+      color: '#a6bbcf',
+      defaults: {
+        name: { value: "", },
+        utterance: { value: "", },
+        direction: { value: "center", },
+        //func: {value:"\nreturn msg;"},
+      },
+      inputs: 1,
+      outputs: 1,
+      icon: "feed.png",
+      label: function () {
+        return this.name || this.utterance.split('\n ')[0] || '発話する';
+      },
+      oneditprepare: function () {
+        var that = this;
+        $("#node-input-outputs").spinner({
+          min: 1
+        });
+
+        this.editor = RED.editor.createEditor({
+          id: 'node-input-func-editor',
+          mode: 'ace/mode/javascript',
+          value: $("#node-input-utterance").val(),
+          globals: {
+            msg: true,
+            context: true,
+            RED: true,
+            util: true,
+            flow: true,
+            global: true,
+            console: true,
+            Buffer: true,
+            setTimeout: true,
+            clearTimeout: true,
+            setInterval: true,
+            clearInterval: true
+          }
+        });
+
+        RED.library.create({
+          url: "functions", // where to get the data from
+          type: "function", // the type of object the library is for
+          editor: this.editor, // the field name the main text body goes to
+          mode: "ace/mode/javascript",
+          fields: ['name', 'outputs']
+        });
+        this.editor.focus();
+      },
+      oneditsave: function () {
+        var annot = this.editor.getSession().getAnnotations();
+        this.noerr = 0;
+        $("#node-input-noerr").val(0);
+        for (var k = 0; k < annot.length; k++) {
+          //console.log(annot[k].type,":",annot[k].text, "on line", annot[k].row);
+          if (annot[k].type === "error") {
+            $("#node-input-noerr").val(annot.length);
+            this.noerr = annot.length;
+          }
+        }
+        $("#node-input-utterance").val(this.editor.getValue());
+        this.editor.destroy();
+        delete this.editor;
+      },
+      oneditcancel: function () {
+        this.editor.destroy();
+        delete this.editor;
+      },
+      oneditresize: function (size) {
+        var rows = $("#dialog-form>div:not(.node-text-editor-row)");
+        var height = $("#dialog-form").height();
+        for (var i = 0; i < rows.size(); i++) {
+          height -= $(rows[i]).outerHeight(true);
+        }
+        var editorRow = $("#dialog-form>div.node-text-editor-row");
+        height -= (parseInt(editorRow.css("marginTop")) + parseInt(editorRow.css("marginBottom")));
+        $(".node-text-editor").css("height", height + "px");
+        this.editor.resize();
+      }
+    });
+
+    RED.nodes.registerType('docomo-chat', {
+      category: 'robot',
+      color: '#a6bbcf',
+      defaults: {
+        direction: { value: "center", },
+      },
+      inputs: 1,
+      outputs: 1,
+      icon: "feed.png",
+      label: function () {
+        return 'docomo-chat';
+      }
+    });
+
+  })();
+</script>
+
+<script type="text/x-red" data-template-name="text-to-speech">
+  <div class="form-row">
+    <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="Name">
+  </div>
+  <div class="form-row">
+    <label for="node-input-direction"><i class="icon-tag"></i> 首の向き</label>
+    <!-- <input type="text" id="node-input-direction" placeholder="Direction"> -->
+    <select type="text" id="node-input-direction" style="width:70%;">
+    <option value="center">正面</option>
+    <option value="left">左向き</option>
+    <option value="right">右向き</option>
+    </select>
+  </div>
+</script>
+
+<script type="text/x-red" data-help-name="text-to-speech">
+  <p>text-to-speech</p>
+</script>
+
+<script type="text/x-red" data-template-name="speech-to-text">
+  <div class="form-row">
+    <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="Name">
+  </div>
+  <div class="form-row">
+    <label for="node-input-timeout"><i class="icon-tag"></i> Timeout</label>
+    <input type="text" id="node-input-timeout" placeholder="Timeout">
+  </div>
+</script>
+
+<script type="text/x-red" data-help-name="speech-to-text">
+  <p>speech-to-text</p>
+</script>
+
+<script type="text/x-red" data-template-name="robot-listener">
+  <div class="form-row">
+    <label for="node-input-host"><i class="icon-tag"></i> Host</label>
+    <input type="text" id="node-input-host" placeholder="Host">
+  </div>
+</script>
+
+<script type="text/x-red" data-help-name="robot-listener">
+  <p>robot-listener</p>
+</script>
+
+<script type="text/x-red" data-template-name="utterance">
+  <div class="form-row">
+    <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="Name">
+  </div>
+  <!-- <div class="form-row">
+    <label for="node-input-utterance"><i class="icon-tag"></i> 発話</label>
+    <input type="text" id="node-input-utterance" placeholder="Utterance">
+  </div> -->
+  <div class="form-row" style="margin-bottom: 0px;">
+    <label for="node-input-utterance"><i class="fa fa-wrench"></i> 発話</label>
+    <input type="hidden" id="node-input-utterance" autofocus="autofocus">
+    <input type="hidden" id="node-input-noerr">
+  </div>
+  <div class="form-row node-text-editor-row">
+    <div style="height: 250px; min-height:150px;" class="node-text-editor" id="node-input-func-editor" ></div>
+  </div>
+  <div class="form-row">
+    <label for="node-input-direction"><i class="icon-tag"></i> 首の向き</label>
+    <!-- <input type="text" id="node-input-direction" placeholder="Direction"> -->
+    <select type="text" id="node-input-direction" style="width:70%;">
+    <option value="center">正面</option>
+    <option value="left">左向き</option>
+    <option value="right">右向き</option>
+    </select>
+  </div>
+</script>
+
+<script type="text/x-red" data-help-name="utterance">
+  <p>utterance</p>
+</script>
+
+<script type="text/x-red" data-template-name="docomo-chat">
+  <div class="form-row">
+    <label for="node-input-direction"><i class="icon-tag"></i> 首の向き</label>
+    <!-- <input type="text" id="node-input-direction" placeholder="Direction"> -->
+    <select type="text" id="node-input-direction" style="width:70%;">
+    <option value="center">正面</option>
+    <option value="left">左向き</option>
+    <option value="right">右向き</option>
+    </select>
+  </div>
+</script>
+
+<script type="text/x-red" data-help-name="docomo-chat">
+  <p>utterance</p>
+</script>
