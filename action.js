@@ -48,8 +48,8 @@ function Action(servo0, servo1) {
   t.talkcount = 0;
   t.mode = 'idle';
   t.state = 'idle';
-  
-  t.setState = function(mode, state) {
+
+  t.setState = function (mode, state) {
     if (t.mode != mode || t.state != state) {
       t.mode = mode;
       t.state = state;
@@ -62,17 +62,17 @@ function Action(servo0, servo1) {
     const u1 = this.servo1.update();
 
     if (mode == 'left') {
-      this.servo1.center = 0.053;
+      this.servo1.center = 0.055;
       return;
     } else
-    if (mode == 'right') {
-      this.servo1.center = 0.093;
-      return;
-    } else
-    if (mode == 'center') {
-      this.servo1.center = this.servo1.initialCenter;
-      return;
-    }
+      if (mode == 'right') {
+        this.servo1.center = 0.091;
+        return;
+      } else
+        if (mode == 'center') {
+          this.servo1.center = this.servo1.initialCenter;
+          return;
+        }
 
     if (u0 == false && u1 == false) {
       if (mode == 'idle') {
@@ -105,48 +105,48 @@ function Action(servo0, servo1) {
         }
         this.talkstep = 0;
       } else
-      if (mode == 'talk') {
-        if (abs(this.servo0.target - this.servo0.center) > 0.001) {
-          this.servo0.target = this.servo0.center;
-          this.servo1.target = this.servo1.center;
-        } else
-          if (abs(this.servo1.target - this.servo1.center) > 0.001) {
+        if (mode == 'talk') {
+          if (abs(this.servo0.target - this.servo0.center) > 0.001) {
             this.servo0.target = this.servo0.center;
             this.servo1.target = this.servo1.center;
-            this.setState(mode, 'centering');
-          } else {
-            this.setState(mode, 'talking');
-            this.servo0.speed = 0.1;
-            switch (this.talkstep) {
-              case 0:
-                this.wait = 5 + Math.random() * 5;
-                this.talkcount = 1 + Math.floor(Math.random() * 5);
-                this.talkstep = 1;
-                break;
-              case 1:
-                if (this.wait > 0) {
-                  this.wait--;
-                } else {
-                  this.talkstep = 2;
-                  this.servo0.target = this.servo0.center + (Math.random() * 0.0025 + 0.0025);
-                }
-                break;
-              case 2:
-                this.servo0.target = this.servo0.center - (Math.random() * 0.0025 + 0.0025);
-                this.talkcount--;
-                if (this.talkcount <= 0) {
-                  this.talkstep = 0;
-                  this.servo0.target = this.servo0.center;
-                } else {
+          } else
+            if (abs(this.servo1.target - this.servo1.center) > 0.001) {
+              this.servo0.target = this.servo0.center;
+              this.servo1.target = this.servo1.center;
+              this.setState(mode, 'centering');
+            } else {
+              this.setState(mode, 'talking');
+              this.servo0.speed = 0.1;
+              switch (this.talkstep) {
+                case 0:
+                  this.wait = 5 + Math.random() * 5;
+                  this.talkcount = 1 + Math.floor(Math.random() * 5);
                   this.talkstep = 1;
-                }
-                break;
+                  break;
+                case 1:
+                  if (this.wait > 0) {
+                    this.wait--;
+                  } else {
+                    this.talkstep = 2;
+                    this.servo0.target = this.servo0.center + (Math.random() * 0.0025 + 0.0025);
+                  }
+                  break;
+                case 2:
+                  this.servo0.target = this.servo0.center - (Math.random() * 0.0025 + 0.0025);
+                  this.talkcount--;
+                  if (this.talkcount <= 0) {
+                    this.talkstep = 0;
+                    this.servo0.target = this.servo0.center;
+                  } else {
+                    this.talkstep = 1;
+                  }
+                  break;
+              }
             }
-          }
-      } else {
-	      this.servo0.target = this.servo0.center;
-	      this.servo1.target = this.servo1.center;
-      }
+        } else {
+          this.servo0.target = this.servo0.center;
+          this.servo1.target = this.servo1.center;
+        }
       if (t1 != this.servo0.target) {
         console.log(`servo0 ${this.servo0.target}`);
         t1 = this.servo0.target;

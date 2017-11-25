@@ -3,7 +3,7 @@ const talk = require('./talk');
 const speech = require('./speech');
 const request = require('request');
 const config = require('./config');
-const APIKEY= process.env.DOCOMO_API_KEY || config.docomo.api_key;
+const APIKEY= config.docomo.api_key;
 
 var context = null;
 

@@ -5,7 +5,7 @@ const request = require('request');
 const dgram = require('dgram');
 const client = dgram.createSocket('udp4');
 const config = require('./config');
-const APIKEY= process.env.DOCOMO_API_KEY || config.docomo.api_key;
+const APIKEY= config.docomo.api_key;
 
 var utterance = null;
 

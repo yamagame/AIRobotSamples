@@ -8,7 +8,7 @@ module.exports = {
     port: 3090,
   },
   docomo: {
-    api_key: '',
+    api_key: process.env.DOCOMO_API_KEY || '',
   },
   mqtt: {
     targetId: 'AIRobot000',
