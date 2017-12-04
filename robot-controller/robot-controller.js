@@ -1,8 +1,75 @@
 const request = require('request');
+const io = require('socket.io-client');
 
 module.exports = function(RED) {
   "use strict";
   var net = require('net');
+  var sockets = {};
+  const requestTimeout = 3000;
+  const connectTimeout = 30000;
+
+  function getId(node, name) {
+    return ((Math.random() * 999999) | 0)+'-'+name;
+  }
+
+  function timeout(timeout, callback) {
+    var done = false;
+    setTimeout(() => {
+      if (done) return;
+      done = true;
+      callback(new Error('timeout'), null);
+    }, timeout);
+    return function(socket) {
+      if (done) return;
+      done = true;
+      callback(null, socket);
+    }
+  }
+
+  function createSocket(host, id, node, callback) {
+    node.log(id);
+    if (sockets[host]) {
+      const t = sockets[host];
+      t.node[id] = true;
+      if (t.socket.connected) {
+        if (callback) callback(t.socket);
+      }
+      return t.socket;
+    }
+    const socket = io(host);
+    socket.on('connect', function(){
+      node.log('socket connect');
+      if (callback) callback(socket);
+    });
+    socket.on('event', function(data){
+      node.log('socket event');
+    });
+    socket.on('disconnect', function(){
+      node.log('socket disconnect');
+    });
+    const q = {}
+    q[id] = true;
+    sockets[host] = {
+      socket: socket,
+      node: q,
+    }
+    return socket;
+  }
+
+  function removeSocket(host, id, node) {
+    node.log(id);
+    const t = sockets[host];
+    if (t) {
+      if (t.node[id]) {
+        delete t.node[id];
+        if (Object.keys(t.node).length <= 0) {
+          t.socket.close();
+          delete sockets[host];
+          node.log('socket close');
+        }
+      }
+    }
+  }
 
   function RobotListenerNode(config) {
     RED.nodes.createNode(this,config);
@@ -10,14 +77,49 @@ module.exports = function(RED) {
     node.host = config.host;
     node.log(`${node.host}`);
     node.on("input", function(msg) {
-      msg.robotHost = node.host;
-      node.send(msg);
+      const id = getId(node, 'RobotListenerNode');
+      const socket = createSocket(node.host, id, node, timeout(requestTimeout, (err, socket) => {
+        if (err) {
+          removeSocket(node.host, id, node);
+          node.send(msg);
+          return;
+        }
+        setTimeout(() => {
+          node.log('timeout 1');
+          removeSocket(node.host, id, node);
+        }, connectTimeout);
+        msg.robotHost = node.host;
+        node.send(msg);
+      }));
+    });
+    this.on('close', function(removed, done) {
+      done();
     });
   }
   RED.nodes.registerType("robot-listener",RobotListenerNode);
 
+  //Socket.IOによる接続
   function _request(node, action, host, body, callback) {
     if (!host) host = 'http://localhost:3090';
+    const id = getId(node, action);
+    const socket = createSocket(host, id, node, timeout(requestTimeout, (err, socket) => {
+      if (err) {
+        callback(null, '');
+        return;
+      }
+      node.log('emit '+action);
+      socket.emit(action, body, (data) => {
+        setTimeout(() => {
+          node.log('timeout 2');
+          removeSocket(host, id, node);
+        }, connectTimeout);
+        callback(null, data);
+      });
+    }));
+  }
+
+  //HTTPによる接続
+  function _request_http(node, action, host, body, callback) {
     request({
       method: 'POST',
       uri: `${host}/${action}`,
@@ -35,11 +137,14 @@ module.exports = function(RED) {
     var node = this;
     node.on("input", function(msg) {
       node.status({fill:"blue",shape:"dot"});
-      _request(node, 'text-to-speech', msg.robotHost, { payload: msg.payload, direction: config.direction }, function(err, res) {
+      _request(node, 'text-to-speech', msg.robotHost, { message: msg.payload, direction: config.direction }, function(err, res) {
         node.log(res);
         node.send(msg);
         node.status({});
       });
+    });
+    this.on('close', function(removed, done) {
+      done();
     });
   }
   RED.nodes.registerType("text-to-speech",TextToSpeechNode);
@@ -60,6 +165,9 @@ module.exports = function(RED) {
         node.status({});
       });
     });
+    this.on('close', function(removed, done) {
+      done();
+    });
   }
   RED.nodes.registerType("speech-to-text",SpeechToTextNode);
 
@@ -69,11 +177,14 @@ module.exports = function(RED) {
     node.utterance = config.utterance;
     node.on("input", function(msg) {
       node.status({fill:"blue",shape:"dot"});
-      _request(node, 'text-to-speech', msg.robotHost, { payload: node.utterance, direction: config.direction }, function(err, res) {
+      _request(node, 'text-to-speech', msg.robotHost, { message: node.utterance, direction: config.direction }, function(err, res) {
         node.log(res);
         node.send(msg);
         node.status({});
       });
+    });
+    this.on('close', function(removed, done) {
+      done();
     });
   }
   RED.nodes.registerType("utterance",UtteranceNode);
@@ -83,13 +194,33 @@ module.exports = function(RED) {
     var node = this;
     node.on("input", function(msg) {
       node.status({fill:"blue",shape:"dot"});
-      _request(node, 'docomo-chat', msg.robotHost, { payload: msg.payload, direction: config.direction }, function(err, res) {
+      _request(node, 'docomo-chat', msg.robotHost, { message: msg.payload, direction: config.direction }, function(err, res) {
         node.log(res);
         node.send(msg);
         node.status({});
       });
     });
+    this.on('close', function(removed, done) {
+      done();
+    });
   }
   RED.nodes.registerType("docomo-chat",DocomoChatNode);
+
+  function CommandNode(config) {
+    RED.nodes.createNode(this,config);
+    var node = this;
+    node.on("input", function(msg) {
+      node.status({fill:"blue",shape:"dot"});
+      _request(node, 'command', msg.robotHost, { command: config.command }, function(err, res) {
+        node.log(res);
+        node.send(msg);
+        node.status({});
+      });
+    });
+    this.on('close', function(removed, done) {
+      done();
+    });
+  }
+  RED.nodes.registerType("command",CommandNode);
 
 }

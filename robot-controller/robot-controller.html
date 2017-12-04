@@ -35,12 +35,13 @@
       category: 'robot',
       color: '#a6bbcf',
       defaults: {
+        name: { value: "" },
         host: { value: "http://localhost:3090", required: true, },
       },
       inputs: 1,
       outputs: 1,
       label: function () {
-        return this.host;
+        return this.name || this.host || 'robot-listener';
       },
       oneditprepare: function () {
       }
@@ -142,6 +143,21 @@
       }
     });
 
+    RED.nodes.registerType('command', {
+      category: 'robot',
+      color: '#a6bbcf',
+      defaults: {
+        name: { value: "", },
+        command: { value: "", },
+      },
+      inputs: 1,
+      outputs: 1,
+      icon: "feed.png",
+      label: function () {
+        return this.name || this.command || 'command';
+      }
+    });
+
   })();
 </script>
 
@@ -181,6 +197,10 @@
 </script>
 
 <script type="text/x-red" data-template-name="robot-listener">
+  <div class="form-row">
+    <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="Name">
+  </div>
   <div class="form-row">
     <label for="node-input-host"><i class="icon-tag"></i> Host</label>
     <input type="text" id="node-input-host" placeholder="Host">
@@ -236,5 +256,20 @@
 </script>
 
 <script type="text/x-red" data-help-name="docomo-chat">
+  <p>utterance</p>
+</script>
+
+<script type="text/x-red" data-template-name="command">
+  <div class="form-row">
+    <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="Name">
+  </div>
+  <div class="form-row">
+    <label for="node-input-command"><i class="icon-tag"></i> Command</label>
+    <input type="text" id="node-input-command" placeholder="Command">
+  </div>
+</script>
+
+<script type="text/x-red" data-help-name="command">
   <p>utterance</p>
 </script>
