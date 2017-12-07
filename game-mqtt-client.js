@@ -2,6 +2,19 @@ const deviceModule = require('aws-iot-device-sdk').device;
 // const speech = require('./speech');
 const config = require('./config');
 
+const USAGE = `
+コマンドの説明
+new: 新規アカウント登録
+start: ゲーム参加
+up: 上に移動
+down: 下に移動
+left: 左に移動
+right: 右に移動
+shot: 弾を撃つ
+coin: 持っているコインの枚数を表示
+help: ヘルプ
+`;
+
 const clientId = process.argv[2] || config.mqtt.clientId;
 var password = null;
 
@@ -68,6 +81,8 @@ device
 
 const readline = require('readline');
 
+console.log(USAGE);
+
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout
@@ -76,13 +91,17 @@ rl.on('line', (input) => {
   if (connected) {
     //console.log(`Published: ${input}`);
     var arg = input.split(' ').filter( v => v != '');
-    var command_json = JSON.stringify({
-      account_id: clientId,
-      cmd: arg[0],
-      value: arg[1],
-      pass: password
-    });
-    device.publish('topic/gunman/playground', command_json);
+    if (arg[0] == 'help') {
+      console.log(USAGE);
+    } else {
+      var command_json = JSON.stringify({
+        account_id: clientId,
+        cmd: arg[0],
+        value: arg[1],
+        pass: password
+      });
+      device.publish('topic/gunman/playground', command_json);
+    }
   } else {
     //console.log(`Received: ${input}`);
   }
