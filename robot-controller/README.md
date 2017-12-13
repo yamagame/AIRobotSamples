@@ -2,7 +2,7 @@
 
 Node-Red からロボットを制御するための Node-Red のモジュールです。
 
-## インストール
+# インストール
 
 ~/.node-red/node_modules フォルダに robot-controller というフォルダを作ってその中にこのフォルダに入っているファイルをコピーします。
 
@@ -10,7 +10,7 @@ npm install コマンドを使って、必要なモジュールをインスト�
 
 node-red を再起動すると、robot モジュールが追加されます。
 
-## 使い方
+# 使い方
 
 ラズベリーパイ側で以下の２つのプログラムを実行しておく必要があります。
 
@@ -22,7 +22,7 @@ $ node robot-server.js
 $ sudo node servo-head.js
 ```
 
-## 追加されるノード
+# 追加されるノード
 
 ### text-to-speech
 
@@ -44,3 +44,7 @@ $ sudo node servo-head.js
 ### docomo-chat
 
 ドコモの雑談対話APIに payload の文字列を送って発話します。
+
+# ライセンス
+
+[MIT](../LICENSE)
