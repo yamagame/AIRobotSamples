@@ -13,7 +13,8 @@
     "raspi": "^5.0.1",
     "raspi-gpio": "^5.0.0",
     "raspi-soft-pwm": "^4.0.1",
-    "request": "^2.83.0"
+    "request": "^2.83.0",
+    "socket.io": "^2.0.4"
   },
   "devDependencies": {},
   "scripts": {
