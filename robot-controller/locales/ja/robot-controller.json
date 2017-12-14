@@ -1,0 +1,51 @@
+{
+  "common": {
+      "label": {
+          "name": "名前",
+          "command": "コマンド",
+          "host": "ホスト",
+          "head-direction": "頭の向き",
+          "action": "アクション",
+          "pattern": "パターン",
+          "utterance": "発話",
+          "head-center": "正面",
+          "head-left": "左向き",
+          "head-right": "右向き",
+          "timeout": "タイムアウト"
+      }
+  },
+  "mecab": {
+    "label": {
+      "name": "会話判定"
+    },
+    "outputlabel": {
+      "OK": "OK",
+      "NG": "NG"
+    }
+  },
+  "utterance": {
+    "label": {
+      "name": "おしゃべり"
+    }
+  },
+  "text-to-speech": {
+    "label": {
+      "name": "text-to-speech"
+    }
+  },
+  "speech-to-text": {
+    "label": {
+      "name": "speech-to-text"
+    }
+  },
+  "chat": {
+    "label": {
+      "name": "雑談する"
+    }
+  },
+  "command": {
+    "label": {
+      "name": "コマンド実行"
+    }
+  }
+}

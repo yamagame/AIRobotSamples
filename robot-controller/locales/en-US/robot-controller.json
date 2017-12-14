@@ -1,0 +1,51 @@
+{
+  "common": {
+      "label": {
+          "name": "Name",
+          "command": "Command",
+          "host": "Host",
+          "head-direction": "Head Direction",
+          "action": "Action",
+          "pattern": "Pattern",
+          "utterance": "Utterance",
+          "head-center": "Center",
+          "head-left": "Left",
+          "head-right": "Right",
+          "timeout": "Timeout"
+      }
+  },
+  "mecab": {
+    "label": {
+      "name": "mecab"
+    },
+    "outputlabel": {
+      "OK": "OK",
+      "NG": "NG"
+    }
+  },
+  "utterance": {
+    "label": {
+      "name": "utterance"
+    }
+  },
+  "text-to-speech": {
+    "label": {
+      "name": "text-to-speech"
+    }
+  },
+  "speech-to-text": {
+    "label": {
+      "name": "speech-to-text"
+    }
+  },
+  "chat": {
+    "label": {
+      "name": "chat"
+    }
+  },
+  "command": {
+    "label": {
+      "name": "command"
+    }
+  }
+}

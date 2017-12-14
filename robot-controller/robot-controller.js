@@ -1,5 +1,6 @@
 const request = require('request');
 const io = require('socket.io-client');
+const mecab_proc = require('./mecab-proc');
 
 module.exports = function(RED) {
   "use strict";
@@ -204,7 +205,7 @@ module.exports = function(RED) {
       done();
     });
   }
-  RED.nodes.registerType("docomo-chat",DocomoChatNode);
+  RED.nodes.registerType("chat",DocomoChatNode);
 
   function CommandNode(config) {
     RED.nodes.createNode(this,config);
@@ -222,5 +223,38 @@ module.exports = function(RED) {
     });
   }
   RED.nodes.registerType("command",CommandNode);
+
+  function MecabNode(config) {
+    RED.nodes.createNode(this,config);
+    var node = this;
+    if (config.pattern) {
+      node.pattern = config.pattern.split('\n').filter( v => v != '' );
+    } else {
+      node.pattern = [];
+    }
+    if (typeof config.action === 'undefined') {
+      node.action = '';
+    } else {
+      node.action = config.action;
+    }
+    node.on("input", function(msg) {
+      node.status({fill:"blue",shape:"dot"});
+      mecab_proc(msg.payload, [ [node.action, node.pattern], ] , function(err, res) {
+        node.log(res);
+        msg.subject = res.subject;
+        msg.action = res.action;
+        if (res.match) {
+          node.send([msg, null]);
+        } else {
+          node.send([null, msg]);
+        }
+        node.status({});
+      });
+    });
+    this.on('close', function(removed, done) {
+      done();
+    });
+  }
+  RED.nodes.registerType("mecab",MecabNode);
 
 }
