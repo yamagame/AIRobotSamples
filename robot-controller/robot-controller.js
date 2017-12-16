@@ -99,6 +99,21 @@ module.exports = function(RED) {
   }
   RED.nodes.registerType("robot-listener",RobotListenerNode);
 
+  function VoiceNode(config) {
+    RED.nodes.createNode(this,config);
+    var node = this;
+    node.voice = config.voice;
+    node.log(`${node.voice}`);
+    node.on("input", function(msg) {
+      msg.robotVoice = node.voice;
+      node.send(msg);
+    });
+    this.on('close', function(removed, done) {
+      done();
+    });
+  }
+  RED.nodes.registerType("robot-voice",VoiceNode);
+
   //Socket.IOによる接続
   function _request(node, action, host, body, callback) {
     if (!host) host = 'http://localhost:3090';
@@ -138,7 +153,11 @@ module.exports = function(RED) {
     var node = this;
     node.on("input", function(msg) {
       node.status({fill:"blue",shape:"dot"});
-      _request(node, 'text-to-speech', msg.robotHost, { message: msg.payload, direction: config.direction }, function(err, res) {
+      _request(node, 'text-to-speech', msg.robotHost, {
+        message: msg.payload,
+        direction: config.direction,
+        voice: msg.robotVoice,
+      }, function(err, res) {
         node.log(res);
         node.send(msg);
         node.status({});
@@ -178,7 +197,11 @@ module.exports = function(RED) {
     node.utterance = config.utterance;
     node.on("input", function(msg) {
       node.status({fill:"blue",shape:"dot"});
-      _request(node, 'text-to-speech', msg.robotHost, { message: node.utterance, direction: config.direction }, function(err, res) {
+      _request(node, 'text-to-speech', msg.robotHost, {
+        message: node.utterance,
+        direction: config.direction,
+        voice: msg.robotVoice,
+      }, function(err, res) {
         node.log(res);
         node.send(msg);
         node.status({});
@@ -195,7 +218,11 @@ module.exports = function(RED) {
     var node = this;
     node.on("input", function(msg) {
       node.status({fill:"blue",shape:"dot"});
-      _request(node, 'docomo-chat', msg.robotHost, { message: msg.payload, direction: config.direction }, function(err, res) {
+      _request(node, 'docomo-chat', msg.robotHost, {
+        message: msg.payload,
+        direction: config.direction,
+        voice: msg.robotVoice,
+      }, function(err, res) {
         node.log(res);
         node.send(msg);
         node.status({});
@@ -212,7 +239,10 @@ module.exports = function(RED) {
     var node = this;
     node.on("input", function(msg) {
       node.status({fill:"blue",shape:"dot"});
-      _request(node, 'command', msg.robotHost, { command: config.command }, function(err, res) {
+      _request(node, 'command', msg.robotHost, {
+        command: config.command,
+        args: config.args,
+      }, function(err, res) {
         node.log(res);
         node.send(msg);
         node.status({});

@@ -37,13 +37,26 @@ $ sudo node servo-head.js
 接続する先のロボットを設定します。  
 デフォルトは localhost:3090 です。
 
+### robot-voice
+
+音声タイプを変更できます。
+デフォルトは reimu です。
+
 ### utterance
 
 入力した文章をロボットに送って発話します。
 
-### docomo-chat
+### chat
 
 ドコモの雑談対話APIに payload の文字列を送って発話します。
+
+### command
+
+commandフォルダに入っているコマンドを実行します。
+
+### mecab
+
+payload を形態素解析してマッチすればOK端子に出力します。
 
 # ライセンス
 

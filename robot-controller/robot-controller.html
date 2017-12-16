@@ -49,6 +49,27 @@
       }
     });
 
+    RED.nodes.registerType('robot-voice', {
+      category: 'robot',
+      color: '#a5d3f1',
+      defaults: {
+        name: { value: "" },
+        voice: { value: "reimu", required: true, },
+      },
+      inputs: 1,
+      outputs: 1,
+      icon: "bridge.png",
+      label: function () {
+        var voice = this.voice || null;
+        if (voice != null) {
+          voice = this._("common.label."+voice)
+        }
+        return this.name || voice || 'robot-voice';
+      },
+      oneditprepare: function () {
+      }
+    });
+
     RED.nodes.registerType('utterance', {
       category: 'robot',
       color: '#92cbee',
@@ -153,6 +174,7 @@
       defaults: {
         name: { value: "", },
         command: { value: "", },
+        args: {value: "", },
       },
       inputs: 1,
       outputs: 1,
@@ -300,6 +322,25 @@
   <p>robot-listener</p>
 </script>
 
+<script type="text/x-red" data-template-name="robot-voice">
+  <div class="form-row">
+    <label for="node-input-name"><i class="icon-tag"></i> <span data-i18n="common.label.name"></label>
+    <input type="text" id="node-input-name" placeholder="Name">
+  </div>
+  <div class="form-row">
+    <label for="node-input-voice"><i class="icon-tag"></i> <span data-i18n="common.label.voice"></label>
+    <!-- <input type="text" id="node-input-voice" placeholder="Direction"> -->
+    <select type="text" id="node-input-voice" style="width:70%;">
+    <option value="reimu" data-i18n="common.label.reimu"></option>
+    <option value="marisa" data-i18n="common.label.marisa"></option>
+    </select>
+  </div>
+</script>
+
+<script type="text/x-red" data-help-name="robot-voice">
+  <p>robot-voice</p>
+</script>
+
 <script type="text/x-red" data-template-name="utterance">
   <div class="form-row">
     <label for="node-input-name"><i class="icon-tag"></i> <span data-i18n="common.label.name"></label>
@@ -356,6 +397,10 @@
   <div class="form-row">
     <label for="node-input-command"><i class="icon-tag"></i> <span data-i18n="common.label.command"></label>
     <input type="text" id="node-input-command" placeholder="Command">
+  </div>
+  <div class="form-row">
+    <label for="node-input-args"><i class="icon-tag"></i> <span data-i18n="common.label.args"></label>
+    <input type="text" id="node-input-args" placeholder="Args">
   </div>
 </script>
 

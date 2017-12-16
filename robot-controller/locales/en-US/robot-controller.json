@@ -3,6 +3,7 @@
       "label": {
           "name": "Name",
           "command": "Command",
+          "args": "Args",
           "host": "Host",
           "head-direction": "Head Direction",
           "action": "Action",
@@ -11,7 +12,10 @@
           "head-center": "Center",
           "head-left": "Left",
           "head-right": "Right",
-          "timeout": "Timeout"
+          "timeout": "Timeout",
+          "voice": "Voice",
+          "reimu": "reimu",
+          "marisa": "marisa"
       }
   },
   "mecab": {

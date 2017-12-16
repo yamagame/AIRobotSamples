@@ -9,6 +9,7 @@ const dgram = require('dgram');
 const config = require('./config');
 const APIKEY= config.docomo.api_key;
 const { exec, spawn } = require('child_process');
+const path = require('path');
 
 var context = null;
 
@@ -76,6 +77,7 @@ function docomo_chat(payload, callback) {
 			context = body.context;
 		}
     servoAction('talk', payload.direction, () => {
+      talk.voice = payload.voice;
     	talk.play(utt, () => {
         servoAction('idle');
         if (callback) callback();
@@ -90,6 +92,7 @@ function text_to_speech(payload, callback) {
   if (!playing) {
     playing = true;
     servoAction('talk', payload.direction, () => {
+      talk.voice = payload.voice;
     	talk.play(payload.message, () => {
         servoAction('idle');
         playing = false;
@@ -146,6 +149,7 @@ app.post('/text-to-speech', (req, res) => {
   text_to_speech({
     message: req.body.message,
     direction: req.body.direction || null,
+    voice: req.body.voice || null,
   }, (err) => {
     res.send('OK');
   });
@@ -168,37 +172,64 @@ const io = require('socket.io')(server);
 io.on('connection', function (socket) {
   console.log('connected');
   socket.on('docomo-chat', function (payload, callback) {
-    docomo_chat({
-      message: payload.message,
-      direction: payload.direction || null,
-    }, (err) => {
-      if (callback) callback('OK');
-    });
+    try {
+      docomo_chat({
+        message: payload.message,
+        direction: payload.direction || null,
+        voice: payload.voice || null,
+      }, (err) => {
+        if (callback) callback('OK');
+      });
+    } catch(err) {
+      console.error(err);
+    }
   });
   socket.on('text-to-speech', function (payload, callback) {
-    text_to_speech({
-      message: payload.message,
-      direction: payload.direction || null,
-    }, (err) => {
-      if (callback) callback('OK');
-    });
+    try {
+      text_to_speech({
+        message: payload.message,
+        direction: payload.direction || null,
+        voice: payload.voice || null,
+      }, (err) => {
+        if (callback) callback('OK');
+      });
+    } catch(err) {
+      console.error(err);
+    }
   });
   socket.on('speech-to-text', function (payload, callback) {
-    speech_to_text({
-      timeout: payload.timeout || 30000,
-    }, (err, data) => {
-      if (callback) callback(data);
-    });
+    try {
+      speech_to_text({
+        timeout: payload.timeout || 30000,
+      }, (err, data) => {
+        if (callback) callback(data);
+      });
+    } catch(err) {
+      console.error(err);
+    }
   });
   socket.on('command', function(payload, callback) {
-    exec(payload.command, (err, stdout, stderr) => {
-      if (err) {
-        console.error(err);
+    try {
+      const base = path.join(__dirname, 'command');
+      const cmd = path.join(base, payload.command);
+      const args = payload.args || '';
+      if (cmd.indexOf(base) == 0) {
+      } else {
+        console.log('NG');
+        if (callback) callback();
         return;
       }
-      console.log(stdout);
-    });
-    if (callback) callback();
+      exec(`${cmd} ${args}`, (err, stdout, stderr) => {
+        if (err) {
+          console.error(err);
+          return;
+        }
+        console.log(stdout);
+      });
+      if (callback) callback();
+    } catch(err) {
+      console.error(err);
+    }
   });
   socket.on('message', function(payload, callback) {
     console.log('message', payload);
