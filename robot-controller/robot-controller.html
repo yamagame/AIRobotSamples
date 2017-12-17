@@ -76,6 +76,7 @@
       defaults: {
         name: { value: "", },
         utterance: { value: "", },
+        talkspeed: { value: "100", },
         direction: { value: "center", },
         //func: {value:"\nreturn msg;"},
       },
@@ -400,6 +401,18 @@
   </div>
   <div class="form-row node-text-editor-row">
     <div style="height: 250px; min-height:150px;" class="node-text-editor" id="node-input-func-editor" ></div>
+  </div>
+  <div class="form-row">
+    <label for="node-input-talkspeed"><i class="icon-tag"></i> <span data-i18n="common.label.talk-speed"></label>
+    <!-- <input type="text" id="node-input-talkspeed" placeholder="Talkspeed"> -->
+    <select type="text" id="node-input-talkspeed" style="width:70%;">
+    <option value="50">50</option>
+    <option value="100">100</option>
+    <option value="150">150</option>
+    <option value="200">200</option>
+    <option value="250">250</option>
+    <option value="300">300</option>
+    </select>
   </div>
   <div class="form-row">
     <label for="node-input-direction"><i class="icon-tag"></i> <span data-i18n="common.label.head-direction"></label>

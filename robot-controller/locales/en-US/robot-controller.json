@@ -5,6 +5,7 @@
           "command": "Command",
           "args": "Args",
           "host": "Host",
+          "talk-speed": "Talk Speed",
           "head-direction": "Head Direction",
           "action": "Action",
           "pattern": "Pattern",
