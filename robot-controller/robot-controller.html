@@ -184,6 +184,49 @@
       }
     });
 
+    RED.nodes.registerType('open-slide', {
+      category: 'robot',
+      color: '#6abcea',
+      defaults: {
+        name: { value: "スライドを開く", },
+        args: {value: "", },
+      },
+      inputs: 1,
+      outputs: 1,
+      icon: "feed.png",
+      label: function () {
+        return this.name || this._("open-slide.label.name");
+      }
+    });
+
+    RED.nodes.registerType('next-page', {
+      category: 'robot',
+      color: '#6abcea',
+      defaults: {
+        name: { value: "次のページへ", },
+      },
+      inputs: 1,
+      outputs: 1,
+      icon: "feed.png",
+      label: function () {
+        return this.name || this._("next-page.label.name");
+      }
+    });
+
+    RED.nodes.registerType('close-slide', {
+      category: 'robot',
+      color: '#6abcea',
+      defaults: {
+        name: { value: "スライドを閉じる", },
+      },
+      inputs: 1,
+      outputs: 1,
+      icon: "feed.png",
+      label: function () {
+        return this.name || this._("close-slide.label.name");
+      }
+    });
+
     RED.nodes.registerType('mecab', {
       category: 'robot',
       color: '#4eb1e6',
@@ -406,6 +449,43 @@
 
 <script type="text/x-red" data-help-name="command">
   <p>command</p>
+</script>
+
+<script type="text/x-red" data-template-name="open-slide">
+  <div class="form-row">
+    <label for="node-input-name"><i class="icon-tag"></i> <span data-i18n="common.label.name"></label>
+    <input type="text" id="node-input-name" placeholder="Name">
+  </div>
+  <div class="form-row">
+    <label for="node-input-args"><i class="icon-tag"></i> <span data-i18n="common.label.args"></label>
+    <input type="text" id="node-input-args" placeholder="Args">
+  </div>
+</script>
+
+<script type="text/x-red" data-help-name="open-slide">
+  <p>スライドを開く</p>
+</script>
+
+<script type="text/x-red" data-template-name="next-page">
+  <div class="form-row">
+    <label for="node-input-name"><i class="icon-tag"></i> <span data-i18n="common.label.name"></label>
+    <input type="text" id="node-input-name" placeholder="Name">
+  </div>
+</script>
+
+<script type="text/x-red" data-help-name="next-page">
+  <p>スライドを次のページへめくる</p>
+</script>
+
+<script type="text/x-red" data-template-name="close-slide">
+  <div class="form-row">
+    <label for="node-input-name"><i class="icon-tag"></i> <span data-i18n="common.label.name"></label>
+    <input type="text" id="node-input-name" placeholder="Name">
+  </div>
+</script>
+
+<script type="text/x-red" data-help-name="close-slide">
+  <p>スライドを閉じる</p>
 </script>
 
 <script type="text/x-red" data-template-name="mecab">
