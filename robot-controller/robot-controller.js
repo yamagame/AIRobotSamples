@@ -199,6 +199,7 @@ module.exports = function(RED) {
       node.status({fill:"blue",shape:"dot"});
       _request(node, 'text-to-speech', msg.robotHost, {
         message: node.utterance,
+        talkspeed: config.talkspeed,
         direction: config.direction,
         voice: msg.robotVoice,
       }, function(err, res) {
@@ -253,6 +254,66 @@ module.exports = function(RED) {
     });
   }
   RED.nodes.registerType("command",CommandNode);
+
+  function OpenSlideNode(config) {
+    RED.nodes.createNode(this,config);
+    var node = this;
+    node.on("input", function(msg) {
+      node.status({fill:"blue",shape:"dot"});
+      _request(node, 'command', msg.robotHost, {
+        command: 'open-slide.cmd',
+        args: config.args,
+      }, function(err, res) {
+        node.log(res);
+        node.send(msg);
+        node.status({});
+      });
+    });
+    this.on('close', function(removed, done) {
+      done();
+    });
+  }
+  RED.nodes.registerType("open-slide",OpenSlideNode);
+
+  function NextPageNode(config) {
+    RED.nodes.createNode(this,config);
+    var node = this;
+    node.on("input", function(msg) {
+      node.status({fill:"blue",shape:"dot"});
+      _request(node, 'command', msg.robotHost, {
+        command: 'right-key.cmd',
+        args: '',
+      }, function(err, res) {
+        node.log(res);
+        node.send(msg);
+        node.status({});
+      });
+    });
+    this.on('close', function(removed, done) {
+      done();
+    });
+  }
+  RED.nodes.registerType("next-page",NextPageNode);
+
+  function CloseSlideNode(config) {
+    RED.nodes.createNode(this,config);
+    var node = this;
+    node.on("input", function(msg) {
+      node.status({fill:"blue",shape:"dot"});
+      _request(node, 'command', msg.robotHost, {
+        command: 'done-key.cmd',
+        args: '',
+      }, function(err, res) {
+        node.log(res);
+        node.send(msg);
+        node.status({});
+      });
+    });
+    this.on('close', function(removed, done) {
+      done();
+    });
+  }
+  RED.nodes.registerType("close-slide",CloseSlideNode);
 
   function MecabNode(config) {
     RED.nodes.createNode(this,config);

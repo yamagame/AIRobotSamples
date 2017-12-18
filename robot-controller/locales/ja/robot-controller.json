@@ -5,6 +5,7 @@
           "command": "コマンド",
           "args": "引数",
           "host": "ホスト",
+          "talk-speed": "喋る速さ",
           "head-direction": "頭の向き",
           "action": "アクション",
           "pattern": "パターン",

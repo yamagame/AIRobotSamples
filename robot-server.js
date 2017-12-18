@@ -93,7 +93,7 @@ function text_to_speech(payload, callback) {
     playing = true;
     servoAction('talk', payload.direction, () => {
       talk.voice = payload.voice;
-    	talk.play(payload.message, () => {
+    	talk.play(payload.message, payload.talkspeed, () => {
         servoAction('idle');
         playing = false;
         if (callback) callback();
@@ -106,7 +106,7 @@ function text_to_speech(payload, callback) {
 
 function speech_to_text(payload, callback) {
   var done = false;
-  
+
   setTimeout(() => {
     if (!done) {
       speech.recording = false;
@@ -115,9 +115,9 @@ function speech_to_text(payload, callback) {
     }
     done = true;
   }, payload.timeout);
-  
+
   speech.recording = true;
-  
+
   function listener(data) {
     if (!done) {
       speech.recording = false;
@@ -126,7 +126,7 @@ function speech_to_text(payload, callback) {
     }
     done = true;
   }
-  
+
   speech.on('data', listener);
 }
 
@@ -145,9 +145,10 @@ app.post('/docomo-chat', (req, res) => {
 app.post('/text-to-speech', (req, res) => {
   console.log('/text-to-speech');
   console.log(req.body);
-  
+
   text_to_speech({
     message: req.body.message,
+    talkspeed: payload.talkspeed || null,
     direction: req.body.direction || null,
     voice: req.body.voice || null,
   }, (err) => {
@@ -158,7 +159,7 @@ app.post('/text-to-speech', (req, res) => {
 app.post('/speech-to-text', (req, res) => {
   console.log('/speech-to-text');
   console.log(req.body);
-  
+
   speech_to_text({
     timeout: req.body.timeout || 30000,
   }, (err, data) => {
@@ -175,6 +176,7 @@ io.on('connection', function (socket) {
     try {
       docomo_chat({
         message: payload.message,
+        talkspeed: payload.talkspeed || null,
         direction: payload.direction || null,
         voice: payload.voice || null,
       }, (err) => {
@@ -188,6 +190,7 @@ io.on('connection', function (socket) {
     try {
       text_to_speech({
         message: payload.message,
+        talkspeed: payload.talkspeed || null,
         direction: payload.direction || null,
         voice: payload.voice || null,
       }, (err) => {
