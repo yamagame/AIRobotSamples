@@ -6,6 +6,7 @@
           "args": "Args",
           "host": "Host",
           "talk-speed": "Talk Speed",
+          "volume": "Volume",
           "head-direction": "Head Direction",
           "action": "Action",
           "intent": "Intent",
