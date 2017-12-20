@@ -6,6 +6,7 @@
           "args": "引数",
           "host": "ホスト",
           "talk-speed": "喋る速さ",
+          "volume": "声の大きさ",
           "head-direction": "頭の向き",
           "action": "アクション",
           "intent": "インテント",
