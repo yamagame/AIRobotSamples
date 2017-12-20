@@ -8,6 +8,7 @@
           "talk-speed": "喋る速さ",
           "head-direction": "頭の向き",
           "action": "アクション",
+          "intent": "インテント",
           "pattern": "パターン",
           "utterance": "発話",
           "head-center": "正面",
