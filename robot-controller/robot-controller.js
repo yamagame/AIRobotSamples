@@ -333,6 +333,7 @@ module.exports = function(RED) {
       mecab_proc(msg.payload, [ [node.intent, node.pattern], ] , function(err, res) {
         node.log(res);
         msg.subject = res.subject;
+        msg.subjects = res.subjects;
         if (res.intent !== '') {
           msg.intent = res.intent;
         }
