@@ -8,6 +8,7 @@
           "talk-speed": "Talk Speed",
           "head-direction": "Head Direction",
           "action": "Action",
+          "intent": "Intent",
           "pattern": "Pattern",
           "utterance": "Utterance",
           "head-center": "Center",

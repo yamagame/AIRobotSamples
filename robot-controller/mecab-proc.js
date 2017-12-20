@@ -97,7 +97,7 @@ module.exports = function(sentense, utters, callback) {
     if (err) {
       callback(err, {
         subject: null,
-        action: 'error',
+        intent: 'error',
         match: false,
       });
       return;
@@ -108,20 +108,20 @@ module.exports = function(sentense, utters, callback) {
           var noun = joinNoun(ret.subject.net).text.join('');
           callback(null, {
             subject: noun,
-            action: key,
+            intent: key,
             match: match,
           });
         } catch(err) {
           callback(null, {
             subject: null,
-            action: key,
+            intent: key,
             match: match,
           });
         }
       } else {
         callback(null, {
           subject: null,
-          action: '',
+          intent: '',
           match: match,
         });
       }
