@@ -323,17 +323,20 @@ module.exports = function(RED) {
     } else {
       node.pattern = [];
     }
-    if (typeof config.action === 'undefined') {
-      node.action = '';
+    if (typeof config.intent === 'undefined') {
+      node.intent = '';
     } else {
-      node.action = config.action;
+      node.intent = config.intent;
     }
     node.on("input", function(msg) {
       node.status({fill:"blue",shape:"dot"});
-      mecab_proc(msg.payload, [ [node.action, node.pattern], ] , function(err, res) {
+      mecab_proc(msg.payload, [ [node.intent, node.pattern], ] , function(err, res) {
         node.log(res);
         msg.subject = res.subject;
-        msg.action = res.action;
+        msg.subjects = res.subjects;
+        if (res.intent !== '') {
+          msg.intent = res.intent;
+        }
         if (res.match) {
           node.send([msg, null]);
         } else {

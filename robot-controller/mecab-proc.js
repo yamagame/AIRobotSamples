@@ -26,6 +26,7 @@ function parseMatch(sentense, callback) {
       text:[],
     }
     var step = 0;
+    var n = 0;
     result.net.form.forEach( (v, i) => {
       switch(step) {
         case 0:
@@ -47,7 +48,7 @@ function parseMatch(sentense, callback) {
         case 1:
           if (v == '@]') {
             r.net.push([])
-            r.form.push('(subject)')
+            r.form.push(`(subject${n++})`)
             r.text.push('...')
             step = 0;
           } else {
@@ -55,7 +56,7 @@ function parseMatch(sentense, callback) {
           break;
       }
     })
-    callback(null, r.form.join(''))
+    callback(null, r.form.join(''), n)
   });
 }
 
@@ -78,10 +79,10 @@ function matchSubject(utterList, result, callback) {
       }
       const utter = utters[c];
       c++;
-      parseMatch(utter, (err, utter) => {
+      parseMatch(utter, (err, utter, count) => {
         var ret = result.match(utter);
         if (ret) {
-          callback(null, key, ret, true);
+          callback(null, key, ret, true, count);
           return;
         }
         _matchSubject(key);
@@ -97,31 +98,46 @@ module.exports = function(sentense, utters, callback) {
     if (err) {
       callback(err, {
         subject: null,
-        action: 'error',
+        subjects: [],
+        intent: 'error',
         match: false,
       });
       return;
     }
-    matchSubject(utters, result, (err, key, ret, match) => {
+    matchSubject(utters, result, (err, key, ret, match, count) => {
       if (ret) {
         try {
-          var noun = joinNoun(ret.subject.net).text.join('');
+          var subject = "";
+          var subjects = [];
+
+          for (var i=0;i<count;i++) {
+            if (ret[`subject${i}`]) {
+              subject = ret[`subject${i}`];
+              var str = joinNoun(subject.net).text.join('');
+              subjects.push(str);
+            }
+          }
+
+          var noun = joinNoun(subject.net).text.join('');
           callback(null, {
             subject: noun,
-            action: key,
+            subjects: subjects,
+            intent: key,
             match: match,
           });
         } catch(err) {
           callback(null, {
             subject: null,
-            action: key,
+            subjects: [],
+            intent: key,
             match: match,
           });
         }
       } else {
         callback(null, {
           subject: null,
-          action: '',
+          subjects: [],
+          intent: '',
           match: match,
         });
       }
