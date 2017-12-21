@@ -1,4 +1,4 @@
-const mecab_parser = require('./mecab-parser');
+const mecab_parser = require('./robot-controller/mecab-parser');
 const sentense = process.argv[2] || "こんにちは";
 const talk = require('./talk');
 
