@@ -103,7 +103,7 @@ function text_to_speech(payload, callback) {
     playing = true;
     servoAction('talk', payload.direction, () => {
       talk.voice = payload.voice;
-    	talk.play(payload.message, payload.talkspeed, () => {
+    	talk.play(payload.message, payload.talkspeed, payload.volume, () => {
         servoAction('idle');
         playing = false;
         if (callback) callback();
@@ -159,6 +159,7 @@ app.post('/text-to-speech', (req, res) => {
   text_to_speech({
     message: req.body.message,
     talkspeed: payload.talkspeed || null,
+    volume: payload.volume || null,
     direction: req.body.direction || null,
     voice: req.body.voice || null,
   }, (err) => {
@@ -190,7 +191,8 @@ io.on('connection', function (socket) {
     try {
       docomo_chat({
         message: payload.message,
-        talkspeed: payload.talkspeed || 95,
+        talkspeed: payload.talkspeed || null,
+        volume: payload.volume || null,
         direction: payload.direction || null,
         voice: payload.voice || null,
         silence: payload.silence || null,
@@ -205,7 +207,8 @@ io.on('connection', function (socket) {
     try {
       text_to_speech({
         message: payload.message,
-        talkspeed: payload.talkspeed || 95,
+        talkspeed: payload.talkspeed || null,
+        volume: payload.volume || null,
         direction: payload.direction || null,
         voice: payload.voice || null,
       }, (err) => {

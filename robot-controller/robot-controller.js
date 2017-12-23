@@ -200,6 +200,7 @@ module.exports = function(RED) {
       _request(node, 'text-to-speech', msg.robotHost, {
         message: node.utterance,
         talkspeed: config.talkspeed,
+        volume: config.volume,
         direction: config.direction,
         voice: msg.robotVoice,
       }, function(err, res) {
