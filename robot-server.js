@@ -83,7 +83,11 @@ function docomo_chat(payload, callback) {
       } else {
         servoAction('talk', payload.direction, () => {
           talk.voice = payload.voice;
-          talk.play(utt, payload.talkspeed, () => {
+          talk.play(utt, {
+            speed: payload.talkspeed,
+            volume: payload.volume,
+            voice: payload.voice,
+          }, () => {
             servoAction('idle');
             if (callback) callback(err, utt);
           });
@@ -100,15 +104,22 @@ var playing = false;
 
 function text_to_speech(payload, callback) {
   if (!playing) {
-    playing = true;
-    servoAction('talk', payload.direction, () => {
-      talk.voice = payload.voice;
-    	talk.play(payload.message, payload.talkspeed, payload.volume, () => {
-        servoAction('idle');
-        playing = false;
-        if (callback) callback();
-    	});
-    });
+    if (payload.silence) {
+      if (callback) callback();
+    } else {
+      playing = true;
+      servoAction('talk', payload.direction, () => {
+        talk.play(payload.message, {
+          speed: payload.talkspeed,
+          volume: payload.volume,
+          voice: payload.voice,
+        }, () => {
+          servoAction('idle');
+          playing = false;
+          if (callback) callback();
+        });
+      });
+    }
   } else {
     if (callback) callback();
   }
@@ -146,7 +157,11 @@ app.post('/docomo-chat', (req, res) => {
 
   docomo_chat({
     message: req.body.message,
+    talkspeed: req.body.talkspeed || null,
+    volume: req.body.volume || null,
     direction: req.body.direction || null,
+    voice: req.body.voice || null,
+    silence: req.body.silence || null,
   }, (err, data) => {
     res.send(data);
   });
@@ -162,6 +177,7 @@ app.post('/text-to-speech', (req, res) => {
     volume: payload.volume || null,
     direction: req.body.direction || null,
     voice: req.body.voice || null,
+    silence: req.body.silence || null,
   }, (err) => {
     res.send('OK');
   });
@@ -211,6 +227,7 @@ io.on('connection', function (socket) {
         volume: payload.volume || null,
         direction: payload.direction || null,
         voice: payload.voice || null,
+        silence: payload.silence || null,
       }, (err) => {
         if (callback) callback('OK');
       });

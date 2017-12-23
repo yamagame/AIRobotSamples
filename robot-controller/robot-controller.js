@@ -72,6 +72,25 @@ module.exports = function(RED) {
     }
   }
 
+  function getParams(param, config) {
+    if (typeof config.voice !== 'undefined' && config.voice !== 'keep') {
+      param.voice = config.voice;
+    }
+    if (typeof config.talkspeed !== 'undefined' && config.talkspeed !== 'keep') {
+      param.talkspeed = config.talkspeed;
+    }
+    if (typeof config.volume !== 'undefined' && config.volume !== 'keep') {
+      param.volume = config.volume;
+    }
+    if (typeof config.direction !== 'undefined' && config.direction !== 'keep') {
+      param.direction = config.direction;
+    }
+    if (typeof config.silence !== 'undefined' && config.silence !== 'keep') {
+      param.silence = config.silence;
+    }
+    return param;
+  }
+
   function RobotListenerNode(config) {
     RED.nodes.createNode(this,config);
     var node = this;
@@ -102,10 +121,11 @@ module.exports = function(RED) {
   function VoiceNode(config) {
     RED.nodes.createNode(this,config);
     var node = this;
+    var params = getParams({}, config);
     node.voice = config.voice;
     node.log(`${node.voice}`);
     node.on("input", function(msg) {
-      msg.robotVoice = node.voice;
+      msg.robotParams = params;
       node.send(msg);
     });
     this.on('close', function(removed, done) {
@@ -151,13 +171,13 @@ module.exports = function(RED) {
   function TextToSpeechNode(config) {
     RED.nodes.createNode(this,config);
     var node = this;
+    var params = {};
     node.on("input", function(msg) {
       node.status({fill:"blue",shape:"dot"});
-      _request(node, 'text-to-speech', msg.robotHost, {
-        message: msg.payload,
-        direction: config.direction,
-        voice: msg.robotVoice,
-      }, function(err, res) {
+      params.message = msg.payload;
+      params = getParams(params, msg.robotParams);
+      params = getParams(params, config);
+      _request(node, 'text-to-speech', msg.robotHost, params, function(err, res) {
         node.log(res);
         node.send(msg);
         node.status({});
@@ -194,16 +214,14 @@ module.exports = function(RED) {
   function UtteranceNode(config) {
     RED.nodes.createNode(this,config);
     var node = this;
+    var params = {};
     node.utterance = config.utterance;
     node.on("input", function(msg) {
       node.status({fill:"blue",shape:"dot"});
-      _request(node, 'text-to-speech', msg.robotHost, {
-        message: node.utterance,
-        talkspeed: config.talkspeed,
-        volume: config.volume,
-        direction: config.direction,
-        voice: msg.robotVoice,
-      }, function(err, res) {
+      params.message = node.utterance;
+      params = getParams(params, msg.robotParams);
+      params = getParams(params, config);
+      _request(node, 'text-to-speech', msg.robotHost, params, function(err, res) {
         node.log(res);
         node.send(msg);
         node.status({});
@@ -218,14 +236,13 @@ module.exports = function(RED) {
   function DocomoChatNode(config) {
     RED.nodes.createNode(this,config);
     var node = this;
+    var params = {};
     node.on("input", function(msg) {
       node.status({fill:"blue",shape:"dot"});
-      _request(node, 'docomo-chat', msg.robotHost, {
-        message: msg.payload,
-        direction: config.direction || null,
-        silence: config.silence || false,
-        voice: msg.robotVoice,
-      }, function(err, res) {
+      params.message = msg.payload;
+      params = getParams(params, msg.robotParams);
+      params = getParams(params, config);
+      _request(node, 'docomo-chat', msg.robotHost, params, function(err, res) {
         msg.utterance = msg.payload;
         msg.payload = res;
         node.log(res);
@@ -246,7 +263,6 @@ module.exports = function(RED) {
       node.status({fill:"blue",shape:"dot"});
       _request(node, 'command', msg.robotHost, {
         command: config.command,
-        silence: config.silence || false,
         args: config.args,
       }, function(err, res) {
         node.log(res);

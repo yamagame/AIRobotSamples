@@ -19,7 +19,8 @@
           "voice": "声",
           "reimu": "霊夢",
           "marisa": "魔理沙",
-          "silence": "しべらない"
+          "silence": "しゃべらない",
+          "keep": "変更しない"
       }
   },
   "mecab": {

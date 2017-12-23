@@ -2,7 +2,10 @@ const EventEmitter = require('events');
 const spawn = require('child_process').spawn;
 const path = require('path');
 
-function say(words, voice, speed, volume, callback) {
+function say(words, params, callback) {
+	const voice = params.voice;
+	const speed = params.speed;
+	const volume = params.volume;
   const conts = words.split(/。|@|＠|？|\s|\?/g);
   const playone = function() {
     if (conts.length <= 0) {
@@ -30,9 +33,9 @@ console.log(cont);
   playone();
 }
 
-function play(speech, voice, speed, volume) {
+function play(speech, params) {
   return new Promise( function(resolve) {
-    say(speech, voice, speed, volume, function() {
+    say(speech, params, function() {
       resolve(null, 'OK');
     });
   });
@@ -43,14 +46,17 @@ function Talk() {
 	t.playQue = [];
 	t.playing = false;
 	t.voice = 'reimu';
+	t.speed = 95;
+	t.volume = 100;
 
-	t.play = function(sentence, speed="100", volume="100", callback) {
-		var voice = this.voice;
-		if (!voice) voice = 'reimu';
+	t.play = function(sentence, params = {}, callback) {
+		if (!params.voice) params.voice = t.voice;
+		if (!params.speed) params.speed = t.speed;
+		if (!params.volume) params.volume = t.volume;
 		this.emit('talk');
 		if (!this.playing) {
 			this.playing = true;
-			play(sentence, voice, speed, volume).then(() => {
+			play(sentence, params).then(() => {
 				if (this.playQue.length > 0) {
 					const sentence = this.playQue.shift();
 					_play(sentence);

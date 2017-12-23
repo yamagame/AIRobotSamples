@@ -19,7 +19,8 @@
           "voice": "Voice",
           "reimu": "reimu",
           "marisa": "marisa",
-          "silence": "silence"
+          "silence": "Silence",
+          "keep": "Keep"
       }
   },
   "mecab": {
