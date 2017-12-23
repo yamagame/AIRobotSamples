@@ -71,18 +71,32 @@ app.use(bodyParser.json())
 function docomo_chat(payload, callback) {
 	chat(payload.message, context, function(err, body) {
     var utt = payload.message+'がどうかしましたか。';
-		if (err) {
-		} else {
-      utt = body.utt;
-			context = body.context;
-		}
-    servoAction('talk', payload.direction, () => {
-      talk.voice = payload.voice;
-    	talk.play(utt, () => {
-        servoAction('idle');
-        if (callback) callback();
-    	});
-    });
+    try {
+      if (err) {
+        console.error(err);
+      } else {
+        utt = body.utt;
+        context = body.context;
+      }
+      if (payload.silence) {
+        if (callback) callback(err, utt);
+      } else {
+        servoAction('talk', payload.direction, () => {
+          talk.voice = payload.voice;
+          talk.play(utt, {
+            speed: payload.talkspeed,
+            volume: payload.volume,
+            voice: payload.voice,
+          }, () => {
+            servoAction('idle');
+            if (callback) callback(err, utt);
+          });
+        });
+      }
+    } catch(err) {
+      console.error(err);
+      if (callback) callback(err, '');
+    }
 	})
 }
 
@@ -90,15 +104,22 @@ var playing = false;
 
 function text_to_speech(payload, callback) {
   if (!playing) {
-    playing = true;
-    servoAction('talk', payload.direction, () => {
-      talk.voice = payload.voice;
-    	talk.play(payload.message, payload.talkspeed, payload.volume, () => {
-        servoAction('idle');
-        playing = false;
-        if (callback) callback();
-    	});
-    });
+    if (payload.silence) {
+      if (callback) callback();
+    } else {
+      playing = true;
+      servoAction('talk', payload.direction, () => {
+        talk.play(payload.message, {
+          speed: payload.talkspeed,
+          volume: payload.volume,
+          voice: payload.voice,
+        }, () => {
+          servoAction('idle');
+          playing = false;
+          if (callback) callback();
+        });
+      });
+    }
   } else {
     if (callback) callback();
   }
@@ -136,9 +157,13 @@ app.post('/docomo-chat', (req, res) => {
 
   docomo_chat({
     message: req.body.message,
+    talkspeed: req.body.talkspeed || null,
+    volume: req.body.volume || null,
     direction: req.body.direction || null,
-  }, (err) => {
-    res.send('OK');
+    voice: req.body.voice || null,
+    silence: req.body.silence || null,
+  }, (err, data) => {
+    res.send(data);
   });
 });
 
@@ -152,6 +177,7 @@ app.post('/text-to-speech', (req, res) => {
     volume: payload.volume || null,
     direction: req.body.direction || null,
     voice: req.body.voice || null,
+    silence: req.body.silence || null,
   }, (err) => {
     res.send('OK');
   });
@@ -173,6 +199,10 @@ const io = require('socket.io')(server);
 
 io.on('connection', function (socket) {
   console.log('connected');
+  socket.on('disconnect', function () {
+    speech.recording = false;
+    console.log('disconnect');
+  });
   socket.on('docomo-chat', function (payload, callback) {
     try {
       docomo_chat({
@@ -181,8 +211,9 @@ io.on('connection', function (socket) {
         volume: payload.volume || null,
         direction: payload.direction || null,
         voice: payload.voice || null,
-      }, (err) => {
-        if (callback) callback('OK');
+        silence: payload.silence || null,
+      }, (err, data) => {
+        if (callback) callback(data);
       });
     } catch(err) {
       console.error(err);
@@ -196,6 +227,7 @@ io.on('connection', function (socket) {
         volume: payload.volume || null,
         direction: payload.direction || null,
         voice: payload.voice || null,
+        silence: payload.silence || null,
       }, (err) => {
         if (callback) callback('OK');
       });

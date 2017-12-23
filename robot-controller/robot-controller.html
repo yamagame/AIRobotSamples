@@ -6,7 +6,12 @@
       color: '#c1ddf5',
       defaults: {
         name: { value: "", },
-        direction: { value: "center", },
+        voice: { value: "keep", required: true, },
+        talkspeed: { value: "keep", required: true, },
+        volume: { value: "keep", required: true, },
+        direction: { value: "keep", required: true, },
+        silence: { value: false, required: true, },
+        algorithm: { value: "keep", required: true, },
       },
       inputs: 1,
       outputs: 1,
@@ -54,7 +59,11 @@
       color: '#a5d3f1',
       defaults: {
         name: { value: "" },
-        voice: { value: "reimu", required: true, },
+        voice: { value: "keep", required: true, },
+        talkspeed: { value: "keep", required: true, },
+        volume: { value: "keep", required: true, },
+        direction: { value: "keep", required: true, },
+        algorithm: { value: "keep", required: true, },
       },
       inputs: 1,
       outputs: 1,
@@ -76,10 +85,12 @@
       defaults: {
         name: { value: "", },
         utterance: { value: "", },
-        talkspeed: { value: "100", },
-        volume: { value: "100", },
-        direction: { value: "center", },
-        //func: {value:"\nreturn msg;"},
+        voice: { value: "keep", required: true, },
+        talkspeed: { value: "keep", required: true, },
+        volume: { value: "keep", required: true, },
+        direction: { value: "keep", required: true, },
+        silence: { value: false, required: true, },
+        algorithm: { value: "keep", required: true, },
       },
       inputs: 1,
       outputs: 1,
@@ -159,7 +170,11 @@
       category: 'robot',
       color: '#7dc3ec',
       defaults: {
-        direction: { value: "center", },
+        voice: { value: "keep", required: true, },
+        talkspeed: { value: "keep", required: true, },
+        volume: { value: "keep", required: true, },
+        direction: { value: "keep", required: true, },
+        silence: { value: false, required: true, },
       },
       inputs: 1,
       outputs: 1,
@@ -323,13 +338,72 @@
     <input type="text" id="node-input-name" placeholder="Name">
   </div>
   <div class="form-row">
+    <label for="node-input-algorithm"><i class="icon-tag"></i> <span data-i18n="common.label.algorithm"></label>
+    <!-- <input type="text" id="node-input-algorithm" placeholder="Algorithm"> -->
+    <select type="text" id="node-input-algorithm" style="width:70%;">
+    <option value="keep" data-i18n="common.label.keep"></option>
+    <option value="sequential" data-i18n="common.label.sequential"></option>
+    <option value="shuffle" data-i18n="common.label.shuffle"></option>
+    <option value="random" data-i18n="common.label.random"></option>
+    </select>
+  </div>
+  <div class="form-row">
+    <label for="node-input-voice"><i class="icon-tag"></i> <span data-i18n="common.label.voice"></label>
+    <!-- <input type="text" id="node-input-voice" placeholder="Direction"> -->
+    <select type="text" id="node-input-voice" style="width:70%;">
+    <option value="keep" data-i18n="common.label.keep"></option>
+    <option value="reimu" data-i18n="common.label.reimu"></option>
+    <option value="marisa" data-i18n="common.label.marisa"></option>
+    </select>
+  </div>
+  <div class="form-row">
+    <label for="node-input-talkspeed"><i class="icon-tag"></i> <span data-i18n="common.label.talk-speed"></label>
+    <!-- <input type="text" id="node-input-talkspeed" placeholder="Talkspeed"> -->
+    <select type="text" id="node-input-talkspeed" style="width:70%;">
+    <option value="keep" data-i18n="common.label.keep"></option>
+    <option value="50">50</option>
+    <option value="60">60</option>
+    <option value="70">70</option>
+    <option value="80">80</option>
+    <option value="90">90</option>
+    <option value="100">100</option>
+    <option value="110">110</option>
+    <option value="120">120</option>
+    <option value="130">130</option>
+    <option value="140">140</option>
+    <option value="150">150</option>
+    </select>
+  </div>
+  <div class="form-row">
+    <label for="node-input-volume"><i class="icon-tag"></i> <span data-i18n="common.label.volume"></label>
+    <!-- <input type="text" id="node-input-volume" placeholder="Volume"> -->
+    <select type="text" id="node-input-volume" style="width:70%;">
+    <option value="keep" data-i18n="common.label.keep"></option>
+    <option value="10">10</option>
+    <option value="20">20</option>
+    <option value="30">30</option>
+    <option value="40">40</option>
+    <option value="50">50</option>
+    <option value="60">60</option>
+    <option value="70">70</option>
+    <option value="80">80</option>
+    <option value="90">90</option>
+    <option value="100">100</option>
+    </select>
+  </div>
+  <div class="form-row">
     <label for="node-input-direction"><i class="icon-tag"></i> <span data-i18n="common.label.head-direction"></label>
     <!-- <input type="text" id="node-input-direction" placeholder="Direction"> -->
     <select type="text" id="node-input-direction" style="width:70%;">
+    <option value="keep" data-i18n="common.label.keep"></option>
     <option value="center" data-i18n="common.label.head-center"></option>
     <option value="left" data-i18n="common.label.head-left"></option>
     <option value="right" data-i18n="common.label.head-right"></option>
     </select>
+  </div>
+  <div class="form-row">
+    <input type="checkbox" id="node-input-silence" style="display: inline-block; width: auto; vertical-align: top;">
+    <label for="node-input-silence" style="width: 70%;" data-i18n="common.label.silence"></label>
   </div>
 </script>
 
@@ -373,11 +447,67 @@
     <input type="text" id="node-input-name" placeholder="Name">
   </div>
   <div class="form-row">
+    <label for="node-input-algorithm"><i class="icon-tag"></i> <span data-i18n="common.label.algorithm"></label>
+    <!-- <input type="text" id="node-input-algorithm" placeholder="Algorithm"> -->
+    <select type="text" id="node-input-algorithm" style="width:70%;">
+    <option value="keep" data-i18n="common.label.keep"></option>
+    <option value="sequential" data-i18n="common.label.sequential"></option>
+    <option value="shuffle" data-i18n="common.label.shuffle"></option>
+    <option value="random" data-i18n="common.label.random"></option>
+    </select>
+  </div>
+  <div class="form-row">
     <label for="node-input-voice"><i class="icon-tag"></i> <span data-i18n="common.label.voice"></label>
     <!-- <input type="text" id="node-input-voice" placeholder="Direction"> -->
     <select type="text" id="node-input-voice" style="width:70%;">
+    <option value="keep" data-i18n="common.label.keep"></option>
     <option value="reimu" data-i18n="common.label.reimu"></option>
     <option value="marisa" data-i18n="common.label.marisa"></option>
+    </select>
+  </div>
+  <div class="form-row">
+    <label for="node-input-talkspeed"><i class="icon-tag"></i> <span data-i18n="common.label.talk-speed"></label>
+    <!-- <input type="text" id="node-input-talkspeed" placeholder="Talkspeed"> -->
+    <select type="text" id="node-input-talkspeed" style="width:70%;">
+    <option value="keep" data-i18n="common.label.keep"></option>
+    <option value="50">50</option>
+    <option value="60">60</option>
+    <option value="70">70</option>
+    <option value="80">80</option>
+    <option value="90">90</option>
+    <option value="100">100</option>
+    <option value="110">110</option>
+    <option value="120">120</option>
+    <option value="130">130</option>
+    <option value="140">140</option>
+    <option value="150">150</option>
+    </select>
+  </div>
+  <div class="form-row">
+    <label for="node-input-volume"><i class="icon-tag"></i> <span data-i18n="common.label.volume"></label>
+    <!-- <input type="text" id="node-input-volume" placeholder="Volume"> -->
+    <select type="text" id="node-input-volume" style="width:70%;">
+    <option value="keep" data-i18n="common.label.keep"></option>
+    <option value="10">10</option>
+    <option value="20">20</option>
+    <option value="30">30</option>
+    <option value="40">40</option>
+    <option value="50">50</option>
+    <option value="60">60</option>
+    <option value="70">70</option>
+    <option value="80">80</option>
+    <option value="90">90</option>
+    <option value="100">100</option>
+    </select>
+  </div>
+  <div class="form-row">
+    <label for="node-input-direction"><i class="icon-tag"></i> <span data-i18n="common.label.head-direction"></label>
+    <!-- <input type="text" id="node-input-direction" placeholder="Direction"> -->
+    <select type="text" id="node-input-direction" style="width:70%;">
+    <option value="keep" data-i18n="common.label.keep"></option>
+    <option value="center" data-i18n="common.label.head-center"></option>
+    <option value="left" data-i18n="common.label.head-left"></option>
+    <option value="right" data-i18n="common.label.head-right"></option>
     </select>
   </div>
 </script>
@@ -404,21 +534,47 @@
     <div style="height: 250px; min-height:150px;" class="node-text-editor" id="node-input-func-editor" ></div>
   </div>
   <div class="form-row">
+    <label for="node-input-algorithm"><i class="icon-tag"></i> <span data-i18n="common.label.algorithm"></label>
+    <!-- <input type="text" id="node-input-algorithm" placeholder="Algorithm"> -->
+    <select type="text" id="node-input-algorithm" style="width:70%;">
+    <option value="keep" data-i18n="common.label.keep"></option>
+    <option value="sequential" data-i18n="common.label.sequential"></option>
+    <option value="shuffle" data-i18n="common.label.shuffle"></option>
+    <option value="random" data-i18n="common.label.random"></option>
+    </select>
+  </div>
+  <div class="form-row">
+    <label for="node-input-voice"><i class="icon-tag"></i> <span data-i18n="common.label.voice"></label>
+    <!-- <input type="text" id="node-input-voice" placeholder="Direction"> -->
+    <select type="text" id="node-input-voice" style="width:70%;">
+    <option value="keep" data-i18n="common.label.keep"></option>
+    <option value="reimu" data-i18n="common.label.reimu"></option>
+    <option value="marisa" data-i18n="common.label.marisa"></option>
+    </select>
+  </div>
+  <div class="form-row">
     <label for="node-input-talkspeed"><i class="icon-tag"></i> <span data-i18n="common.label.talk-speed"></label>
     <!-- <input type="text" id="node-input-talkspeed" placeholder="Talkspeed"> -->
     <select type="text" id="node-input-talkspeed" style="width:70%;">
+    <option value="keep" data-i18n="common.label.keep"></option>
     <option value="50">50</option>
+    <option value="60">60</option>
+    <option value="70">70</option>
+    <option value="80">80</option>
+    <option value="90">90</option>
     <option value="100">100</option>
+    <option value="110">110</option>
+    <option value="120">120</option>
+    <option value="130">130</option>
+    <option value="140">140</option>
     <option value="150">150</option>
-    <option value="200">200</option>
-    <option value="250">250</option>
-    <option value="300">300</option>
     </select>
   </div>
   <div class="form-row">
     <label for="node-input-volume"><i class="icon-tag"></i> <span data-i18n="common.label.volume"></label>
     <!-- <input type="text" id="node-input-volume" placeholder="Volume"> -->
     <select type="text" id="node-input-volume" style="width:70%;">
+    <option value="keep" data-i18n="common.label.keep"></option>
     <option value="10">10</option>
     <option value="20">20</option>
     <option value="30">30</option>
@@ -435,10 +591,15 @@
     <label for="node-input-direction"><i class="icon-tag"></i> <span data-i18n="common.label.head-direction"></label>
     <!-- <input type="text" id="node-input-direction" placeholder="Direction"> -->
     <select type="text" id="node-input-direction" style="width:70%;">
+    <option value="keep" data-i18n="common.label.keep"></option>
     <option value="center" data-i18n="common.label.head-center"></option>
     <option value="left" data-i18n="common.label.head-left"></option>
     <option value="right" data-i18n="common.label.head-right"></option>
     </select>
+  </div>
+  <div class="form-row">
+    <input type="checkbox" id="node-input-silence" style="display: inline-block; width: auto; vertical-align: top;">
+    <label for="node-input-silence" style="width: 70%;" data-i18n="common.label.silence"></label>
   </div>
 </script>
 
@@ -448,13 +609,62 @@
 
 <script type="text/x-red" data-template-name="chat">
   <div class="form-row">
+    <label for="node-input-voice"><i class="icon-tag"></i> <span data-i18n="common.label.voice"></label>
+    <!-- <input type="text" id="node-input-voice" placeholder="Direction"> -->
+    <select type="text" id="node-input-voice" style="width:70%;">
+    <option value="keep" data-i18n="common.label.keep"></option>
+    <option value="reimu" data-i18n="common.label.reimu"></option>
+    <option value="marisa" data-i18n="common.label.marisa"></option>
+    </select>
+  </div>
+  <div class="form-row">
+    <label for="node-input-talkspeed"><i class="icon-tag"></i> <span data-i18n="common.label.talk-speed"></label>
+    <!-- <input type="text" id="node-input-talkspeed" placeholder="Talkspeed"> -->
+    <select type="text" id="node-input-talkspeed" style="width:70%;">
+    <option value="keep" data-i18n="common.label.keep"></option>
+    <option value="50">50</option>
+    <option value="60">60</option>
+    <option value="70">70</option>
+    <option value="80">80</option>
+    <option value="90">90</option>
+    <option value="100">100</option>
+    <option value="110">110</option>
+    <option value="120">120</option>
+    <option value="130">130</option>
+    <option value="140">140</option>
+    <option value="150">150</option>
+    </select>
+  </div>
+  <div class="form-row">
+    <label for="node-input-volume"><i class="icon-tag"></i> <span data-i18n="common.label.volume"></label>
+    <!-- <input type="text" id="node-input-volume" placeholder="Volume"> -->
+    <select type="text" id="node-input-volume" style="width:70%;">
+    <option value="keep" data-i18n="common.label.keep"></option>
+    <option value="10">10</option>
+    <option value="20">20</option>
+    <option value="30">30</option>
+    <option value="40">40</option>
+    <option value="50">50</option>
+    <option value="60">60</option>
+    <option value="70">70</option>
+    <option value="80">80</option>
+    <option value="90">90</option>
+    <option value="100">100</option>
+    </select>
+  </div>
+  <div class="form-row">
     <label for="node-input-direction"><i class="icon-tag"></i> <span data-i18n="common.label.head-direction"></label>
     <!-- <input type="text" id="node-input-direction" placeholder="Direction"> -->
     <select type="text" id="node-input-direction" style="width:70%;">
+    <option value="keep" data-i18n="common.label.keep"></option>
     <option value="center" data-i18n="common.label.head-center"></option>
     <option value="left" data-i18n="common.label.head-left"></option>
     <option value="right" data-i18n="common.label.head-right"></option>
     </select>
+  </div>
+  <div class="form-row">
+    <input type="checkbox" id="node-input-silence" style="display: inline-block; width: auto; vertical-align: top;">
+    <label for="node-input-silence" style="width: 70%;" data-i18n="common.label.silence"></label>
   </div>
 </script>
 
