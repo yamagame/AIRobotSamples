@@ -159,6 +159,7 @@
       color: '#7dc3ec',
       defaults: {
         direction: { value: "center", },
+        silence: { value: false },
       },
       inputs: 1,
       outputs: 1,
@@ -438,6 +439,10 @@
     <option value="left" data-i18n="common.label.head-left"></option>
     <option value="right" data-i18n="common.label.head-right"></option>
     </select>
+  </div>
+  <div class="form-row">
+    <input type="checkbox" id="node-input-silence" style="display: inline-block; width: auto; vertical-align: top;">
+    <label for="node-input-silence" style="width: 70%;" data-i18n="common.label.silence"></label>
   </div>
 </script>
 

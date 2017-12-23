@@ -71,18 +71,28 @@ app.use(bodyParser.json())
 function docomo_chat(payload, callback) {
 	chat(payload.message, context, function(err, body) {
     var utt = payload.message+'がどうかしましたか。';
-		if (err) {
-		} else {
-      utt = body.utt;
-			context = body.context;
-		}
-    servoAction('talk', payload.direction, () => {
-      talk.voice = payload.voice;
-    	talk.play(utt, () => {
-        servoAction('idle');
-        if (callback) callback();
-    	});
-    });
+    try {
+      if (err) {
+        console.error(err);
+      } else {
+        utt = body.utt;
+        context = body.context;
+      }
+      if (payload.silence) {
+        if (callback) callback(err, utt);
+      } else {
+        servoAction('talk', payload.direction, () => {
+          talk.voice = payload.voice;
+          talk.play(utt, payload.talkspeed, () => {
+            servoAction('idle');
+            if (callback) callback(err, utt);
+          });
+        });
+      }
+    } catch(err) {
+      console.error(err);
+      if (callback) callback(err, '');
+    }
 	})
 }
 
@@ -137,8 +147,8 @@ app.post('/docomo-chat', (req, res) => {
   docomo_chat({
     message: req.body.message,
     direction: req.body.direction || null,
-  }, (err) => {
-    res.send('OK');
+  }, (err, data) => {
+    res.send(data);
   });
 });
 
@@ -172,15 +182,20 @@ const io = require('socket.io')(server);
 
 io.on('connection', function (socket) {
   console.log('connected');
+  socket.on('disconnect', function () {
+    speech.recording = false;
+    console.log('disconnect');
+  });
   socket.on('docomo-chat', function (payload, callback) {
     try {
       docomo_chat({
         message: payload.message,
-        talkspeed: payload.talkspeed || null,
+        talkspeed: payload.talkspeed || 95,
         direction: payload.direction || null,
         voice: payload.voice || null,
-      }, (err) => {
-        if (callback) callback('OK');
+        silence: payload.silence || null,
+      }, (err, data) => {
+        if (callback) callback(data);
       });
     } catch(err) {
       console.error(err);
@@ -190,7 +205,7 @@ io.on('connection', function (socket) {
     try {
       text_to_speech({
         message: payload.message,
-        talkspeed: payload.talkspeed || null,
+        talkspeed: payload.talkspeed || 95,
         direction: payload.direction || null,
         voice: payload.voice || null,
       }, (err) => {

@@ -17,7 +17,8 @@
           "timeout": "タイムアウト",
           "voice": "声",
           "reimu": "霊夢",
-          "marisa": "魔理沙"
+          "marisa": "魔理沙",
+          "silence": "しべらない"
       }
   },
   "mecab": {

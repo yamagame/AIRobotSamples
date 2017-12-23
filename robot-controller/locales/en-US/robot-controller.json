@@ -17,7 +17,8 @@
           "timeout": "Timeout",
           "voice": "Voice",
           "reimu": "reimu",
-          "marisa": "marisa"
+          "marisa": "marisa",
+          "silence": "silence"
       }
   },
   "mecab": {

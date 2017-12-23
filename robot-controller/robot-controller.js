@@ -221,9 +221,12 @@ module.exports = function(RED) {
       node.status({fill:"blue",shape:"dot"});
       _request(node, 'docomo-chat', msg.robotHost, {
         message: msg.payload,
-        direction: config.direction,
+        direction: config.direction || null,
+        silence: config.silence || false,
         voice: msg.robotVoice,
       }, function(err, res) {
+        msg.utterance = msg.payload;
+        msg.payload = res;
         node.log(res);
         node.send(msg);
         node.status({});
@@ -242,6 +245,7 @@ module.exports = function(RED) {
       node.status({fill:"blue",shape:"dot"});
       _request(node, 'command', msg.robotHost, {
         command: config.command,
+        silence: config.silence || false,
         args: config.args,
       }, function(err, res) {
         node.log(res);
