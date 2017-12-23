@@ -18,7 +18,14 @@
           "timeout": "Timeout",
           "voice": "Voice",
           "reimu": "reimu",
-          "marisa": "marisa"
+          "marisa": "marisa",
+          "silence": "Silence",
+          "keep": "Keep",
+          "algorithm": "Play Algorithm",
+          "shuffle": "Shuffle",
+          "random": "Random",
+          "onetime": "Onetime",
+          "sequential": "Sequential"
       }
   },
   "mecab": {

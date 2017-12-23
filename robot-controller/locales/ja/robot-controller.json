@@ -18,7 +18,14 @@
           "timeout": "タイムアウト",
           "voice": "声",
           "reimu": "霊夢",
-          "marisa": "魔理沙"
+          "marisa": "魔理沙",
+          "silence": "しゃべらない",
+          "keep": "変更しない",
+          "algorithm": "読み方",
+          "shuffle": "シャッフル",
+          "random": "ランダム",
+          "onetime": "ワンタイム",
+          "sequential": "シーケンシャル"
       }
   },
   "mecab": {
