@@ -11,6 +11,7 @@
         volume: { value: "keep", required: true, },
         direction: { value: "keep", required: true, },
         silence: { value: false, required: true, },
+        algorithm: { value: "keep", required: true, },
       },
       inputs: 1,
       outputs: 1,
@@ -62,6 +63,7 @@
         talkspeed: { value: "keep", required: true, },
         volume: { value: "keep", required: true, },
         direction: { value: "keep", required: true, },
+        algorithm: { value: "keep", required: true, },
       },
       inputs: 1,
       outputs: 1,
@@ -88,7 +90,7 @@
         volume: { value: "keep", required: true, },
         direction: { value: "keep", required: true, },
         silence: { value: false, required: true, },
-        //func: {value:"\nreturn msg;"},
+        algorithm: { value: "keep", required: true, },
       },
       inputs: 1,
       outputs: 1,
@@ -336,6 +338,16 @@
     <input type="text" id="node-input-name" placeholder="Name">
   </div>
   <div class="form-row">
+    <label for="node-input-algorithm"><i class="icon-tag"></i> <span data-i18n="common.label.algorithm"></label>
+    <!-- <input type="text" id="node-input-algorithm" placeholder="Algorithm"> -->
+    <select type="text" id="node-input-algorithm" style="width:70%;">
+    <option value="keep" data-i18n="common.label.keep"></option>
+    <option value="sequential" data-i18n="common.label.sequential"></option>
+    <option value="shuffle" data-i18n="common.label.shuffle"></option>
+    <option value="random" data-i18n="common.label.random"></option>
+    </select>
+  </div>
+  <div class="form-row">
     <label for="node-input-voice"><i class="icon-tag"></i> <span data-i18n="common.label.voice"></label>
     <!-- <input type="text" id="node-input-voice" placeholder="Direction"> -->
     <select type="text" id="node-input-voice" style="width:70%;">
@@ -435,6 +447,16 @@
     <input type="text" id="node-input-name" placeholder="Name">
   </div>
   <div class="form-row">
+    <label for="node-input-algorithm"><i class="icon-tag"></i> <span data-i18n="common.label.algorithm"></label>
+    <!-- <input type="text" id="node-input-algorithm" placeholder="Algorithm"> -->
+    <select type="text" id="node-input-algorithm" style="width:70%;">
+    <option value="keep" data-i18n="common.label.keep"></option>
+    <option value="sequential" data-i18n="common.label.sequential"></option>
+    <option value="shuffle" data-i18n="common.label.shuffle"></option>
+    <option value="random" data-i18n="common.label.random"></option>
+    </select>
+  </div>
+  <div class="form-row">
     <label for="node-input-voice"><i class="icon-tag"></i> <span data-i18n="common.label.voice"></label>
     <!-- <input type="text" id="node-input-voice" placeholder="Direction"> -->
     <select type="text" id="node-input-voice" style="width:70%;">
@@ -510,6 +532,16 @@
   </div>
   <div class="form-row node-text-editor-row">
     <div style="height: 250px; min-height:150px;" class="node-text-editor" id="node-input-func-editor" ></div>
+  </div>
+  <div class="form-row">
+    <label for="node-input-algorithm"><i class="icon-tag"></i> <span data-i18n="common.label.algorithm"></label>
+    <!-- <input type="text" id="node-input-algorithm" placeholder="Algorithm"> -->
+    <select type="text" id="node-input-algorithm" style="width:70%;">
+    <option value="keep" data-i18n="common.label.keep"></option>
+    <option value="sequential" data-i18n="common.label.sequential"></option>
+    <option value="shuffle" data-i18n="common.label.shuffle"></option>
+    <option value="random" data-i18n="common.label.random"></option>
+    </select>
   </div>
   <div class="form-row">
     <label for="node-input-voice"><i class="icon-tag"></i> <span data-i18n="common.label.voice"></label>
