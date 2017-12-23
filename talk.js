@@ -2,7 +2,7 @@ const EventEmitter = require('events');
 const spawn = require('child_process').spawn;
 const path = require('path');
 
-function say(words, voice, speed, callback) {
+function say(words, voice, speed, volume, callback) {
   const conts = words.split(/。|@|＠|？|\s|\?/g);
   const playone = function() {
     if (conts.length <= 0) {
@@ -16,12 +16,12 @@ function say(words, voice, speed, callback) {
 		}
 console.log(cont);
 		if (voice == 'marisa') {
-			const _playone = spawn(path.join(__dirname,'talk-f2.sh'), [`-s`, speed, `　${cont}`]);
+			const _playone = spawn(path.join(__dirname,'talk-f2.sh'), [`-s`, speed, `-g`, volume, `　${cont}`]);
 			_playone.on('close', function(code) {
 				playone();
 			});
 		} else {
-			const _playone = spawn(path.join(__dirname,'talk-f1.sh'), [`-s`, speed, `　${cont}`]);
+			const _playone = spawn(path.join(__dirname,'talk-f1.sh'), [`-s`, speed, `-g`, volume, `　${cont}`]);
 			_playone.on('close', function(code) {
 				playone();
 			});
@@ -30,9 +30,9 @@ console.log(cont);
   playone();
 }
 
-function play(speech, voice, speed) {
+function play(speech, voice, speed, volume) {
   return new Promise( function(resolve) {
-    say(speech, voice, speed, function() {
+    say(speech, voice, speed, volume, function() {
       resolve(null, 'OK');
     });
   });
@@ -44,13 +44,13 @@ function Talk() {
 	t.playing = false;
 	t.voice = 'reimu';
 
-	t.play = function(sentence, speed="100", callback) {
+	t.play = function(sentence, speed="100", volume="100", callback) {
 		var voice = this.voice;
 		if (!voice) voice = 'reimu';
 		this.emit('talk');
 		if (!this.playing) {
 			this.playing = true;
-			play(sentence, voice, speed).then(() => {
+			play(sentence, voice, speed, volume).then(() => {
 				if (this.playQue.length > 0) {
 					const sentence = this.playQue.shift();
 					_play(sentence);
