@@ -276,7 +276,9 @@ class Play {
         let msg = messages[this.shuffle[this.shufflePtr]][0];
         if (msg == '') {
         } else {
-          this.textToSpeech(node, msg, host, params, callback);
+          this.textToSpeech(node, msg, host, params, (err, res) => {
+            callback(err, msg);
+          });
           done = true;
         }
         this.shufflePtr++;
@@ -299,7 +301,9 @@ class Play {
         let msg = messages[this.shuffle[this.shufflePtr]][0];
         if (msg == '') {
         } else {
-          this.textToSpeech(node, msg, host, params, callback);
+          this.textToSpeech(node, msg, host, params, (err, res) => {
+            callback(err, msg);
+          });
           done = true;
         }
         this.shufflePtr++;
@@ -321,7 +325,9 @@ class Play {
         let msg = messages[this.shufflePtr][0];
         if (msg == '') {
         } else {
-          this.textToSpeech(node, msg, host, params, callback);
+          this.textToSpeech(node, msg, host, params, (err, res) => {
+            callback(err, msg);
+          });
           done = true;
         }
         this.shufflePtr++;
@@ -481,7 +487,7 @@ module.exports = function(RED) {
       params = getParams(params, config);
       node.algorithmPlay.request(node, msg.robotHost, params, function(err, res) {
         node.log(res);
-        msg.playStatus = res;
+        msg.result = res;
         node.send(msg);
         node.status({});
       });
@@ -527,7 +533,7 @@ module.exports = function(RED) {
       params = getParams(params, config);
       node.algorithmPlay.request(node, msg.robotHost, params, function(err, res) {
         node.log(res);
-        msg.playStatus = res;
+        msg.result = res;
         node.send(msg);
         node.status({});
       });
