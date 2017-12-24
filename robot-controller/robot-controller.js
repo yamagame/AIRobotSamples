@@ -276,9 +276,13 @@ class Play {
         let msg = messages[this.shuffle[this.shufflePtr]][0];
         if (msg == '') {
         } else {
-          this.textToSpeech(node, msg, host, params, (err, res) => {
+          if (params.silence) {
             callback(err, msg);
-          });
+          } else {
+            this.textToSpeech(node, msg, host, params, (err, res) => {
+              callback(err, msg);
+            });
+          }
           done = true;
         }
         this.shufflePtr++;
@@ -301,9 +305,13 @@ class Play {
         let msg = messages[this.shuffle[this.shufflePtr]][0];
         if (msg == '') {
         } else {
-          this.textToSpeech(node, msg, host, params, (err, res) => {
+          if (params.silence) {
             callback(err, msg);
-          });
+          } else {
+            this.textToSpeech(node, msg, host, params, (err, res) => {
+              callback(err, msg);
+            });
+          }
           done = true;
         }
         this.shufflePtr++;
@@ -325,9 +333,13 @@ class Play {
         let msg = messages[this.shufflePtr][0];
         if (msg == '') {
         } else {
-          this.textToSpeech(node, msg, host, params, (err, res) => {
+          if (params.silence) {
             callback(err, msg);
-          });
+          } else {
+            this.textToSpeech(node, msg, host, params, (err, res) => {
+              callback(err, msg);
+            });
+          }
           done = true;
         }
         this.shufflePtr++;
@@ -370,11 +382,7 @@ class Play {
             play();
           }
         } else {
-          this.textToSpeech(node, msg, host, params, (err, res) => {
-            if (err) {
-              callback(err, 'ERR');
-              return;
-            }
+          if (params.silence) {
             if (cmd.length > 0) {
               doCmd(() => {
                 play();
@@ -382,7 +390,21 @@ class Play {
             } else {
               play();
             }
-          });
+          } else {
+            this.textToSpeech(node, msg, host, params, (err, res) => {
+              if (err) {
+                callback(err, 'ERR');
+                return;
+              }
+              if (cmd.length > 0) {
+                doCmd(() => {
+                  play();
+                });
+              } else {
+                play();
+              }
+            });
+          }
         }
       }
       play();
@@ -554,7 +576,7 @@ module.exports = function(RED) {
       params = getParams(params, msg.robotParams);
       params = getParams(params, config);
       _request(node, 'docomo-chat', msg.robotHost, params, function(err, res) {
-        msg.utterance = msg.payload;
+        msg.result = msg.payload;
         msg.payload = res;
         node.log(res);
         node.send(msg);
@@ -694,6 +716,7 @@ module.exports = function(RED) {
           };  
           return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4() +S4());
       })();
+      msg.topic = node.context().global.get('topic');
       if (typeof node.context().global.get('topicForks') === 'undefined') {
         node.context().global.set('topicForks',{});
       }
@@ -723,6 +746,11 @@ module.exports = function(RED) {
           }
           node.context().global.set('topicForks', topicForks);
           if (topicForks[msg.topicId].count <= 0) {
+            if (typeof topicForks[msg.topicId].msg.topicName !== 'undefined') {
+              node.context().global.set('topic', topicForks[msg.topicId].msg.topicName);
+            } else {
+              node.context().global.set('topic', null);
+            }
             node.send(topicForks[msg.topicId].msg);
             break;
           }
