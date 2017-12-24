@@ -677,4 +677,69 @@ module.exports = function(RED) {
   }
   RED.nodes.registerType("mecab",MecabNode);
 
+  function TopicForkNode(config) {
+    RED.nodes.createNode(this,config);
+    var node = this;
+    const wireNum = config.wires[0].length;
+    node.on("input", function(msg) {
+      msg.topicId = (function(){
+          var S4 = function() {
+              return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
+          };  
+          return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4() +S4());
+      })();
+      if (typeof node.context().global.get('topicForks') === 'undefined') {
+        node.context().global.set('topicForks',{});
+      }
+      const topicForks = node.context().global.get('topicForks');
+      topicForks[msg.topicId] = { count: node.wires[0].length, priority: 0, name: "", msg: {} };
+      node.context().global.set('topicForks', topicForks);
+      node.status({fill:"blue",shape:"dot"});
+      node.send(msg);
+      node.status({});
+    });
+  }
+  RED.nodes.registerType("topic-fork",TopicForkNode);
+
+  function TopicJoinNode(config) {
+    RED.nodes.createNode(this,config);
+    var node = this;
+    node.on("input", function(msg) {
+      node.status({fill:"blue",shape:"dot"});
+      while (true) {
+        if (typeof node.context().global.get('topicForks') !== 'undefined' && typeof msg.topicId !== 'undefined') {
+          const topicForks = node.context().global.get('topicForks');
+          topicForks[msg.topicId].count --;
+          if (typeof msg.topicPriority !== 'undefined' && topicForks[msg.topicId].priority < msg.topicPriority) {
+            topicForks[msg.topicId].priority = msg.topicPriority;
+            topicForks[msg.topicId].name = msg.topicName;
+            topicForks[msg.topicId].msg = msg;
+          }
+          node.context().global.set('topicForks', topicForks);
+          if (topicForks[msg.topicId].count <= 0) {
+            node.send(topicForks[msg.topicId].msg);
+            break;
+          }
+        }
+        node.send(null);
+        break;
+      }
+      node.status({});
+    });
+  }
+  RED.nodes.registerType("topic-join",TopicJoinNode);
+
+  function TopicNode(config) {
+    RED.nodes.createNode(this,config);
+    var node = this;
+    node.on("input", function(msg) {
+      node.status({fill:"blue",shape:"dot"});
+      msg.topicName = config.topic;
+      msg.topicPriority = parseInt(config.priority);
+      node.send(msg);
+      node.status({});
+    });
+  }
+  RED.nodes.registerType("topic",TopicNode);
+
 }
