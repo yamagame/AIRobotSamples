@@ -165,25 +165,171 @@ class Play {
 
   request(node, host, params, callback) {
     const messages = this.getMessage(params.message);
+    var cmd = [];
+
+    const doCmd = (callback) => {
+      if (cmd.length <= 0) {
+        callback();
+        return;
+      }
+      const d = cmd.shift().trim();
+      const page = d.match('(\\d+)page') || d.match('(\\d+)ページ');
+      var delay = d.match('(\\d+)s') || d.match('(\\d+)秒');
+      if (delay == null) {
+        delay = d.match('(\\d+)');
+      } else {
+        delay = parseInt(delay)*1000;
+      }
+      var speed = d.match('(\\d+)speed') || d.match('(\\d+)スピード');
+      if (speed == null) {
+        speed = d.match('speed(\\d+)') || d.match('スピード(\\d+)');
+      }
+      var volume = d.match('(\\d+)volume') || d.match('(\\d+)音量');
+      if (volume == null) {
+        volume = d.match('volume(\\d+)') || d.match('音量(\\d+)');
+      }
+      if (d == 'next' || d.indexOf('次') >= 0) {
+        this.nextPage(node, host, (err, res) => {
+          if (err) {
+            callback(err, 'ERR');
+            return;
+          }
+          doCmd(callback);
+        });
+      } else
+      if (d == 'prev' || d.indexOf('前') >= 0) {
+        this.prevPage(node, host, (err, res) => {
+          if (err) {
+            callback(err, 'ERR');
+            return;
+          }
+          doCmd(callback);
+        });
+      } else
+      if (d == 'top' || d.indexOf('トップ') >= 0) {
+        this.topPage(node, host, (err, res) => {
+          if (err) {
+            callback(err, 'ERR');
+            return;
+          }
+          doCmd(callback);
+        });
+      } else
+      if (d == 'marisa' || d.indexOf('魔理沙') >= 0) {
+        params.voice = 'marisa';
+        doCmd(callback);
+      } else
+      if (d == 'reimu' || d.indexOf('霊夢') >= 0) {
+        params.voice = 'reimu';
+        doCmd(callback);
+      } else
+      if (d == 'speed' || d.indexOf('スピード') >= 0) {
+        params.speed = speed[1];
+        doCmd(callback);
+      } else
+      if (d == 'volume' || d.indexOf('音量') >= 0) {
+        params.volume = volume[1];
+        doCmd(callback);
+      } else
+      if (d == 'left' || d.indexOf('左') >= 0) {
+        params.direction = 'left';
+        doCmd(callback);
+      } else
+      if (d == 'center' || d.indexOf('中') >= 0) {
+        params.direction = 'center';
+        doCmd(callback);
+      } else
+      if (d == 'right' || d.indexOf('右') >= 0) {
+        params.direction = 'right';
+        doCmd(callback);
+      } else
+      if (page !== null) {
+        this.openPage(node, host, page[1], (err, res) => {
+          if (err) {
+            callback(err, 'ERR');
+            return;
+          }
+          doCmd(callback);
+        });
+      } else
+      if (delay !== null) {
+        this.delay(parseInt(delay[1]), (err, res) => {
+          if (err) {
+            callback(err, 'ERR');
+            return;
+          }
+          doCmd(callback);
+        });
+      } else {
+        doCmd(callback);
+      }
+    }
+
     if (params.algorithm === 'shuffle') {
-      let msg = messages[this.shuffle[this.shufflePtr]][0];
-      this.textToSpeech(node, msg, host, params, callback);
-      this.shufflePtr++;
-      if (this.shufflePtr >= this.shuffle.length) {
-        this.doShuffle();
+      const ptr = this.shufflePtr;
+      var done = false;
+      while (true) {
+        if (this.shufflePtr >= this.shuffle.length) {
+          this.shufflePtr = 0;
+          break;
+        }
+        let msg = messages[this.shuffle[this.shufflePtr]][0];
+        if (msg == '') {
+        } else {
+          this.textToSpeech(node, msg, host, params, callback);
+          done = true;
+        }
+        this.shufflePtr++;
+        if (this.shufflePtr >= this.shuffle.length) {
+          this.doShuffle();
+        }
+        //一周するか発話したら終了
+        if (ptr == this.shufflePtr || done) break;
       }
     } else
     if (params.algorithm === 'random') {
-      let msg = messages[getRndInteger(0, messages.length)][0];
-      this.textToSpeech(node, msg, host, params, callback);
+      this.doShuffle();
+      const ptr = this.shufflePtr;
+      var done = false;
+      while (true) {
+        if (this.shufflePtr >= this.shuffle.length) {
+          this.shufflePtr = 0;
+          break;
+        }
+        let msg = messages[this.shuffle[this.shufflePtr]][0];
+        if (msg == '') {
+        } else {
+          this.textToSpeech(node, msg, host, params, callback);
+          done = true;
+        }
+        this.shufflePtr++;
+        if (this.shufflePtr >= this.shuffle.length) {
+          this.doShuffle();
+        }
+        //一周するか発話したら終了
+        if (ptr == this.shufflePtr || done) break;
+      }
     } else
     if (params.algorithm === 'onetime') {
-      if (this.shufflePtr < this.shuffle.length) {
-        let msg = messages[this.shuffle[this.shufflePtr]][0];
-        this.textToSpeech(node, msg, host, params, callback);
+      const ptr = this.shufflePtr;
+      var done = false;
+      while (true) {
+        if (this.shufflePtr >= messages.length) {
+          this.shufflePtr = 0;
+          break;
+        }
+        let msg = messages[this.shufflePtr][0];
+        if (msg == '') {
+        } else {
+          this.textToSpeech(node, msg, host, params, callback);
+          done = true;
+        }
         this.shufflePtr++;
-      } else {
-        callback(null, 'END');
+        if (this.shufflePtr >= this.shuffle.length) {
+          this.doShuffle();
+        }
+        //一周するか発話したら終了
+        if (ptr == this.shufflePtr || done) break;
       }
     } else {
       var i = 0;
@@ -193,7 +339,7 @@ class Play {
           return;
         }
         var msg = '';
-        var cmd = [];
+        cmd = [];
         for (;i<messages.length;i++) {
           if (messages[i][0] !== '') {
             if (msg !== '') msg += "\n";
@@ -208,71 +354,12 @@ class Play {
             break;
           }
         }
-        const doCmd = () => {
-          if (cmd.length <= 0) {
-            play();
-            return;
-          }
-          const d = cmd.shift().trim();
-          const page = d.match('(\\d+)page') || d.match('(\\d+)ページ');
-          var delay = d.match('(\\d+)s') || d.match('(\\d+)秒');
-          if (delay == null) {
-            delay = d.match('(\\d+)');
-          } else {
-            delay = parseInt(delay)*1000;
-          }
-          if (d == 'next' || d.indexOf('次') >= 0) {
-            this.nextPage(node, host, (err, res) => {
-              if (err) {
-                callback(err, 'ERR');
-                return;
-              }
-              doCmd();
-            });
-          } else
-          if (d == 'prev' || d.indexOf('前') >= 0) {
-            this.prevPage(node, host, (err, res) => {
-              if (err) {
-                callback(err, 'ERR');
-                return;
-              }
-              doCmd();
-            });
-          } else
-          if (d == 'top' || d.indexOf('トップ') >= 0) {
-            this.topPage(node, host, (err, res) => {
-              if (err) {
-                callback(err, 'ERR');
-                return;
-              }
-              doCmd();
-            });
-          } else
-          if (page !== null) {
-            this.openPage(node, host, page[1], (err, res) => {
-              if (err) {
-                callback(err, 'ERR');
-                return;
-              }
-              doCmd();
-            });
-          } else
-          if (delay !== null) {
-            this.delay(parseInt(delay[1]), (err, res) => {
-              if (err) {
-                callback(err, 'ERR');
-                return;
-              }
-              doCmd();
-            });
-          } else {
-            doCmd();
-          }
-        }
         node.log(cmd);
         if (msg == '') {
           if (cmd.length > 0) {
-            doCmd();
+            doCmd(() => {
+              play();
+            });
           } else {
             play();
           }
@@ -283,7 +370,9 @@ class Play {
               return;
             }
             if (cmd.length > 0) {
-              doCmd();
+              doCmd(() => {
+                play();
+              });
             } else {
               play();
             }
@@ -306,8 +395,8 @@ module.exports = function(RED) {
     if (typeof config.voice !== 'undefined' && config.voice !== 'keep') {
       param.voice = config.voice;
     }
-    if (typeof config.talkspeed !== 'undefined' && config.talkspeed !== 'keep') {
-      param.talkspeed = config.talkspeed;
+    if (typeof config.speed !== 'undefined' && config.speed !== 'keep') {
+      param.speed = config.speed;
     }
     if (typeof config.volume !== 'undefined' && config.volume !== 'keep') {
       param.volume = config.volume;
