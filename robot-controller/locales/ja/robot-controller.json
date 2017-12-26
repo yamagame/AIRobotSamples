@@ -25,7 +25,9 @@
           "shuffle": "シャッフル",
           "random": "ランダム",
           "onetime": "ワンタイム",
-          "sequential": "シーケンシャル"
+          "sequential": "シーケンシャル",
+          "topic": "トピック名",
+          "priority": "優先度"
       }
   },
   "mecab": {
@@ -60,6 +62,21 @@
   "command": {
     "label": {
       "name": "コマンド実行"
+    }
+  },
+  "topic-fork": {
+    "label": {
+      "name": "トピック分岐"
+    }
+  },
+  "topic-join": {
+    "label": {
+      "name": "トピック結合"
+    }
+  },
+  "topic": {
+    "label": {
+      "name": "トピック"
     }
   }
 }

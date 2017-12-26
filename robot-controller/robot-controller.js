@@ -165,25 +165,189 @@ class Play {
 
   request(node, host, params, callback) {
     const messages = this.getMessage(params.message);
+    var cmd = [];
+
+    const doCmd = (callback) => {
+      if (cmd.length <= 0) {
+        callback();
+        return;
+      }
+      const d = cmd.shift().trim();
+      const page = d.match('(\\d+)page') || d.match('(\\d+)ページ');
+      var delay = d.match('(\\d+)s') || d.match('(\\d+)秒');
+      if (delay == null) {
+        delay = d.match('(\\d+)');
+      } else {
+        delay = parseInt(delay)*1000;
+      }
+      var speed = d.match('(\\d+)speed') || d.match('(\\d+)スピード');
+      if (speed == null) {
+        speed = d.match('speed(\\d+)') || d.match('スピード(\\d+)');
+      }
+      var volume = d.match('(\\d+)volume') || d.match('(\\d+)音量');
+      if (volume == null) {
+        volume = d.match('volume(\\d+)') || d.match('音量(\\d+)');
+      }
+      if (d == 'next' || d.indexOf('次') >= 0) {
+        this.nextPage(node, host, (err, res) => {
+          if (err) {
+            callback(err, 'ERR');
+            return;
+          }
+          doCmd(callback);
+        });
+      } else
+      if (d == 'prev' || d.indexOf('前') >= 0) {
+        this.prevPage(node, host, (err, res) => {
+          if (err) {
+            callback(err, 'ERR');
+            return;
+          }
+          doCmd(callback);
+        });
+      } else
+      if (d == 'top' || d.indexOf('トップ') >= 0) {
+        this.topPage(node, host, (err, res) => {
+          if (err) {
+            callback(err, 'ERR');
+            return;
+          }
+          doCmd(callback);
+        });
+      } else
+      if (d == 'marisa' || d.indexOf('魔理沙') >= 0) {
+        params.voice = 'marisa';
+        doCmd(callback);
+      } else
+      if (d == 'reimu' || d.indexOf('霊夢') >= 0) {
+        params.voice = 'reimu';
+        doCmd(callback);
+      } else
+      if (d == 'speed' || d.indexOf('スピード') >= 0) {
+        params.speed = speed[1];
+        doCmd(callback);
+      } else
+      if (d == 'volume' || d.indexOf('音量') >= 0) {
+        params.volume = volume[1];
+        doCmd(callback);
+      } else
+      if (d == 'left' || d.indexOf('左') >= 0) {
+        params.direction = 'left';
+        doCmd(callback);
+      } else
+      if (d == 'center' || d.indexOf('中') >= 0) {
+        params.direction = 'center';
+        doCmd(callback);
+      } else
+      if (d == 'right' || d.indexOf('右') >= 0) {
+        params.direction = 'right';
+        doCmd(callback);
+      } else
+      if (page !== null) {
+        this.openPage(node, host, page[1], (err, res) => {
+          if (err) {
+            callback(err, 'ERR');
+            return;
+          }
+          doCmd(callback);
+        });
+      } else
+      if (delay !== null) {
+        this.delay(parseInt(delay[1]), (err, res) => {
+          if (err) {
+            callback(err, 'ERR');
+            return;
+          }
+          doCmd(callback);
+        });
+      } else {
+        doCmd(callback);
+      }
+    }
+
     if (params.algorithm === 'shuffle') {
-      let msg = messages[this.shuffle[this.shufflePtr]][0];
-      this.textToSpeech(node, msg, host, params, callback);
-      this.shufflePtr++;
-      if (this.shufflePtr >= this.shuffle.length) {
-        this.doShuffle();
+      const ptr = this.shufflePtr;
+      var done = false;
+      while (true) {
+        if (this.shufflePtr >= this.shuffle.length) {
+          this.shufflePtr = 0;
+          break;
+        }
+        let msg = messages[this.shuffle[this.shufflePtr]][0];
+        if (msg == '') {
+        } else {
+          if (params.silence) {
+            callback(err, msg);
+          } else {
+            this.textToSpeech(node, msg, host, params, (err, res) => {
+              callback(err, msg);
+            });
+          }
+          done = true;
+        }
+        this.shufflePtr++;
+        if (this.shufflePtr >= this.shuffle.length) {
+          this.doShuffle();
+        }
+        //一周するか発話したら終了
+        if (ptr == this.shufflePtr || done) break;
       }
     } else
     if (params.algorithm === 'random') {
-      let msg = messages[getRndInteger(0, messages.length)][0];
-      this.textToSpeech(node, msg, host, params, callback);
+      this.doShuffle();
+      const ptr = this.shufflePtr;
+      var done = false;
+      while (true) {
+        if (this.shufflePtr >= this.shuffle.length) {
+          this.shufflePtr = 0;
+          break;
+        }
+        let msg = messages[this.shuffle[this.shufflePtr]][0];
+        if (msg == '') {
+        } else {
+          if (params.silence) {
+            callback(err, msg);
+          } else {
+            this.textToSpeech(node, msg, host, params, (err, res) => {
+              callback(err, msg);
+            });
+          }
+          done = true;
+        }
+        this.shufflePtr++;
+        if (this.shufflePtr >= this.shuffle.length) {
+          this.doShuffle();
+        }
+        //一周するか発話したら終了
+        if (ptr == this.shufflePtr || done) break;
+      }
     } else
     if (params.algorithm === 'onetime') {
-      if (this.shufflePtr < this.shuffle.length) {
-        let msg = messages[this.shuffle[this.shufflePtr]][0];
-        this.textToSpeech(node, msg, host, params, callback);
+      const ptr = this.shufflePtr;
+      var done = false;
+      while (true) {
+        if (this.shufflePtr >= messages.length) {
+          this.shufflePtr = 0;
+          break;
+        }
+        let msg = messages[this.shufflePtr][0];
+        if (msg == '') {
+        } else {
+          if (params.silence) {
+            callback(err, msg);
+          } else {
+            this.textToSpeech(node, msg, host, params, (err, res) => {
+              callback(err, msg);
+            });
+          }
+          done = true;
+        }
         this.shufflePtr++;
-      } else {
-        callback(null, 'END');
+        if (this.shufflePtr >= this.shuffle.length) {
+          this.doShuffle();
+        }
+        //一周するか発話したら終了
+        if (ptr == this.shufflePtr || done) break;
       }
     } else {
       var i = 0;
@@ -193,7 +357,7 @@ class Play {
           return;
         }
         var msg = '';
-        var cmd = [];
+        cmd = [];
         for (;i<messages.length;i++) {
           if (messages[i][0] !== '') {
             if (msg !== '') msg += "\n";
@@ -208,86 +372,39 @@ class Play {
             break;
           }
         }
-        const doCmd = () => {
-          if (cmd.length <= 0) {
-            play();
-            return;
-          }
-          const d = cmd.shift().trim();
-          const page = d.match('(\\d+)page') || d.match('(\\d+)ページ');
-          var delay = d.match('(\\d+)s') || d.match('(\\d+)秒');
-          if (delay == null) {
-            delay = d.match('(\\d+)');
-          } else {
-            delay = parseInt(delay)*1000;
-          }
-          if (d == 'next' || d.indexOf('次') >= 0) {
-            this.nextPage(node, host, (err, res) => {
-              if (err) {
-                callback(err, 'ERR');
-                return;
-              }
-              doCmd();
-            });
-          } else
-          if (d == 'prev' || d.indexOf('前') >= 0) {
-            this.prevPage(node, host, (err, res) => {
-              if (err) {
-                callback(err, 'ERR');
-                return;
-              }
-              doCmd();
-            });
-          } else
-          if (d == 'top' || d.indexOf('トップ') >= 0) {
-            this.topPage(node, host, (err, res) => {
-              if (err) {
-                callback(err, 'ERR');
-                return;
-              }
-              doCmd();
-            });
-          } else
-          if (page !== null) {
-            this.openPage(node, host, page[1], (err, res) => {
-              if (err) {
-                callback(err, 'ERR');
-                return;
-              }
-              doCmd();
-            });
-          } else
-          if (delay !== null) {
-            this.delay(parseInt(delay[1]), (err, res) => {
-              if (err) {
-                callback(err, 'ERR');
-                return;
-              }
-              doCmd();
-            });
-          } else {
-            doCmd();
-          }
-        }
         node.log(cmd);
         if (msg == '') {
           if (cmd.length > 0) {
-            doCmd();
+            doCmd(() => {
+              play();
+            });
           } else {
             play();
           }
         } else {
-          this.textToSpeech(node, msg, host, params, (err, res) => {
-            if (err) {
-              callback(err, 'ERR');
-              return;
-            }
+          if (params.silence) {
             if (cmd.length > 0) {
-              doCmd();
+              doCmd(() => {
+                play();
+              });
             } else {
               play();
             }
-          });
+          } else {
+            this.textToSpeech(node, msg, host, params, (err, res) => {
+              if (err) {
+                callback(err, 'ERR');
+                return;
+              }
+              if (cmd.length > 0) {
+                doCmd(() => {
+                  play();
+                });
+              } else {
+                play();
+              }
+            });
+          }
         }
       }
       play();
@@ -306,8 +423,8 @@ module.exports = function(RED) {
     if (typeof config.voice !== 'undefined' && config.voice !== 'keep') {
       param.voice = config.voice;
     }
-    if (typeof config.talkspeed !== 'undefined' && config.talkspeed !== 'keep') {
-      param.talkspeed = config.talkspeed;
+    if (typeof config.speed !== 'undefined' && config.speed !== 'keep') {
+      param.speed = config.speed;
     }
     if (typeof config.volume !== 'undefined' && config.volume !== 'keep') {
       param.volume = config.volume;
@@ -392,7 +509,7 @@ module.exports = function(RED) {
       params = getParams(params, config);
       node.algorithmPlay.request(node, msg.robotHost, params, function(err, res) {
         node.log(res);
-        msg.playStatus = res;
+        msg.result = res;
         node.send(msg);
         node.status({});
       });
@@ -438,7 +555,7 @@ module.exports = function(RED) {
       params = getParams(params, config);
       node.algorithmPlay.request(node, msg.robotHost, params, function(err, res) {
         node.log(res);
-        msg.playStatus = res;
+        msg.result = res;
         node.send(msg);
         node.status({});
       });
@@ -459,7 +576,7 @@ module.exports = function(RED) {
       params = getParams(params, msg.robotParams);
       params = getParams(params, config);
       _request(node, 'docomo-chat', msg.robotHost, params, function(err, res) {
-        msg.utterance = msg.payload;
+        msg.result = msg.payload;
         msg.payload = res;
         node.log(res);
         node.send(msg);
@@ -587,5 +704,76 @@ module.exports = function(RED) {
     });
   }
   RED.nodes.registerType("mecab",MecabNode);
+
+  function TopicForkNode(config) {
+    RED.nodes.createNode(this,config);
+    var node = this;
+    const wireNum = config.wires[0].length;
+    node.on("input", function(msg) {
+      msg.topicId = (function(){
+          var S4 = function() {
+              return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
+          };  
+          return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4() +S4());
+      })();
+      msg.topic = node.context().global.get('topic');
+      if (typeof node.context().global.get('topicForks') === 'undefined') {
+        node.context().global.set('topicForks',{});
+      }
+      const topicForks = node.context().global.get('topicForks');
+      topicForks[msg.topicId] = { count: node.wires[0].length, priority: 0, name: "", msg: {} };
+      node.context().global.set('topicForks', topicForks);
+      node.status({fill:"blue",shape:"dot"});
+      node.send(msg);
+      node.status({});
+    });
+  }
+  RED.nodes.registerType("topic-fork",TopicForkNode);
+
+  function TopicJoinNode(config) {
+    RED.nodes.createNode(this,config);
+    var node = this;
+    node.on("input", function(msg) {
+      node.status({fill:"blue",shape:"dot"});
+      while (true) {
+        if (typeof node.context().global.get('topicForks') !== 'undefined' && typeof msg.topicId !== 'undefined') {
+          const topicForks = node.context().global.get('topicForks');
+          topicForks[msg.topicId].count --;
+          if (typeof msg.topicPriority !== 'undefined' && topicForks[msg.topicId].priority < msg.topicPriority) {
+            topicForks[msg.topicId].priority = msg.topicPriority;
+            topicForks[msg.topicId].name = msg.topicName;
+            topicForks[msg.topicId].msg = msg;
+          }
+          node.context().global.set('topicForks', topicForks);
+          if (topicForks[msg.topicId].count <= 0) {
+            if (typeof topicForks[msg.topicId].msg.topicName !== 'undefined') {
+              node.context().global.set('topic', topicForks[msg.topicId].msg.topicName);
+            } else {
+              node.context().global.set('topic', null);
+            }
+            node.send(topicForks[msg.topicId].msg);
+            break;
+          }
+        }
+        node.send(null);
+        break;
+      }
+      node.status({});
+    });
+  }
+  RED.nodes.registerType("topic-join",TopicJoinNode);
+
+  function TopicNode(config) {
+    RED.nodes.createNode(this,config);
+    var node = this;
+    node.on("input", function(msg) {
+      node.status({fill:"blue",shape:"dot"});
+      msg.topicName = config.topic;
+      msg.topicPriority = parseInt(config.priority);
+      node.send(msg);
+      node.status({});
+    });
+  }
+  RED.nodes.registerType("topic",TopicNode);
 
 }
