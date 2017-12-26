@@ -84,7 +84,7 @@ function docomo_chat(payload, callback) {
         servoAction('talk', payload.direction, () => {
           talk.voice = payload.voice;
           talk.play(utt, {
-            speed: payload.talkspeed,
+            speed: payload.speed,
             volume: payload.volume,
             voice: payload.voice,
           }, () => {
@@ -110,7 +110,7 @@ function text_to_speech(payload, callback) {
       playing = true;
       servoAction('talk', payload.direction, () => {
         talk.play(payload.message, {
-          speed: payload.talkspeed,
+          speed: payload.speed,
           volume: payload.volume,
           voice: payload.voice,
         }, () => {
@@ -157,7 +157,7 @@ app.post('/docomo-chat', (req, res) => {
 
   docomo_chat({
     message: req.body.message,
-    talkspeed: req.body.talkspeed || null,
+    speed: req.body.speed || null,
     volume: req.body.volume || null,
     direction: req.body.direction || null,
     voice: req.body.voice || null,
@@ -173,7 +173,7 @@ app.post('/text-to-speech', (req, res) => {
 
   text_to_speech({
     message: req.body.message,
-    talkspeed: payload.talkspeed || null,
+    speed: payload.speed || null,
     volume: payload.volume || null,
     direction: req.body.direction || null,
     voice: req.body.voice || null,
@@ -207,7 +207,7 @@ io.on('connection', function (socket) {
     try {
       docomo_chat({
         message: payload.message,
-        talkspeed: payload.talkspeed || null,
+        speed: payload.speed || null,
         volume: payload.volume || null,
         direction: payload.direction || null,
         voice: payload.voice || null,
@@ -223,7 +223,7 @@ io.on('connection', function (socket) {
     try {
       text_to_speech({
         message: payload.message,
-        talkspeed: payload.talkspeed || null,
+        speed: payload.speed || null,
         volume: payload.volume || null,
         direction: payload.direction || null,
         voice: payload.voice || null,
