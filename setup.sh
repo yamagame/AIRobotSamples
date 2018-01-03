@@ -19,5 +19,6 @@ npm i
 
 sudo apt-get purge wolfram-engine -y
 sudo apt-get install mecab libmecab-dev mecab-ipadic-utf8 -y
+sudo apt-get install ibus-anthy -y
 
 sudo rpi-update

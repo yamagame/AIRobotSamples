@@ -1,10 +1,13 @@
 //首振り
+const pigpio = require('pigpio');
 const raspi = require('raspi');
 const Servo = require('./action').Servo;
 const Action = require('./action').Action;
 const dgram = require('dgram');
 const server = dgram.createSocket('udp4');
 const config = require('./config');
+
+pigpio.configureClock(5, 0);
 
 var mode = process.env.MODE || 'idle';
 
