@@ -13,12 +13,15 @@ const path = require('path');
 
 var context = null;
 
-function chat(message, context, callback) {
+function chat(message, context, tone, callback) {
   const json = {
     utt: message,
   }
   if (context) {
     json.context = context;
+  }
+  if (tone) {
+    json.t = tone;
   }
   request.post({
     url:'https://api.apigw.smt.docomo.ne.jp/dialogue/v1/dialogue?APIKEY='+APIKEY,
@@ -69,7 +72,14 @@ const app = express()
 app.use(bodyParser.json())
 
 function docomo_chat(payload, callback) {
-	chat(payload.message, context, function(err, body) {
+  if (payload.tone == 'kansai_dialect') {
+    var tone = "20";
+  } else if (payload.tone == 'baby_talk_japanese') {
+    var tone = "30";
+  } else {
+    var tone = "";
+  }
+	chat(payload.message, context, tone, function(err, body) {
     var utt = payload.message+'がどうかしましたか。';
     try {
       if (err) {
@@ -159,6 +169,7 @@ app.post('/docomo-chat', (req, res) => {
     message: req.body.message,
     speed: req.body.speed || null,
     volume: req.body.volume || null,
+    tone: req.body.tone || null,
     direction: req.body.direction || null,
     voice: req.body.voice || null,
     silence: req.body.silence || null,
@@ -209,6 +220,7 @@ io.on('connection', function (socket) {
         message: payload.message,
         speed: payload.speed || null,
         volume: payload.volume || null,
+        tone: payload.tone || null
         direction: payload.direction || null,
         voice: payload.voice || null,
         silence: payload.silence || null,
