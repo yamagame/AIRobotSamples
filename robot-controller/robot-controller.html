@@ -173,6 +173,7 @@
         voice: { value: "keep", required: true, },
         speed: { value: "keep", required: true, },
         volume: { value: "keep", required: true, },
+        tone: { value: "standard_japanese", required:true, },
         direction: { value: "keep", required: true, },
         silence: { value: false, required: true, },
       },
@@ -697,6 +698,15 @@
     <option value="80">80</option>
     <option value="90">90</option>
     <option value="100">100</option>
+    </select>
+  </div>
+  <div class="form-row">
+    <label for="node-input-tone"><i class="icon-tag"></i> <span data-i18n="common.label.tone"></label>
+    <!-- <input type="text" id="node-input-tone" placeholder="Tone"> -->
+    <select type="text" id="node-input-tone" style="width:70%;">
+    <option value="standard_japanese" data-i18n="common.label.standard_japanese"></option>
+    <option value="kansai_dialect" data-i18n="common.label.kansai_dialect"></option>
+    <option value="baby_talk_japanese" data-i18n="common.label.baby_talk_japanese"></option>
     </select>
   </div>
   <div class="form-row">
