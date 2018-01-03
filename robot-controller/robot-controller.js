@@ -429,6 +429,9 @@ module.exports = function(RED) {
     if (typeof config.volume !== 'undefined' && config.volume !== 'keep') {
       param.volume = config.volume;
     }
+    if (typeof config.tone !== 'undefined') {
+      param.tone = config.tone;
+    }
     if (typeof config.direction !== 'undefined' && config.direction !== 'keep') {
       param.direction = config.direction;
     }
@@ -713,7 +716,7 @@ module.exports = function(RED) {
       msg.topicId = (function(){
           var S4 = function() {
               return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
-          };  
+          };
           return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4() +S4());
       })();
       msg.topic = node.context().global.get('topic');
