@@ -17,7 +17,7 @@ function Speech() {
   };
 
   var micInstance = mic({
-    'device': 'plughw:1,0',
+    'device': 'plughw:0,0',
     'rate': '16000',
     'channels': '1',
     'debug': false,
