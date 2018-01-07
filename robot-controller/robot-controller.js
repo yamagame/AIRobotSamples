@@ -751,6 +751,7 @@ module.exports = function(RED) {
           if (topicForks[msg.topicId].count <= 0) {
             if (typeof topicForks[msg.topicId].msg.topicName !== 'undefined') {
               node.context().global.set('topic', topicForks[msg.topicId].msg.topicName);
+              topicForks[msg.topicId].msg.topic = topicForks[msg.topicId].msg.topicName;
             } else {
               node.context().global.set('topic', null);
             }
