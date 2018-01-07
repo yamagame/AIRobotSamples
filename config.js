@@ -14,4 +14,5 @@ module.exports = {
     targetId: 'AIRobot000',
     clientId: 'AIRobot000',
   },
+  voice_hat: false,
 }
