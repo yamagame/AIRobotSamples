@@ -429,7 +429,7 @@ module.exports = function(RED) {
     if (typeof config.volume !== 'undefined' && config.volume !== 'keep') {
       param.volume = config.volume;
     }
-    if (typeof config.tone !== 'undefined') {
+    if (typeof config.tone !== 'undefined' && config.tone !== 'keep') {
       param.tone = config.tone;
     }
     if (typeof config.direction !== 'undefined' && config.direction !== 'keep') {
@@ -473,10 +473,10 @@ module.exports = function(RED) {
   function VoiceNode(config) {
     RED.nodes.createNode(this,config);
     var node = this;
-    var params = getParams({}, config);
-    node.voice = config.voice;
-    node.log(`${node.voice}`);
+    var params = {};
     node.on("input", function(msg) {
+      params = getParams(params, msg.robotParams);
+      params = getParams(params, config);
       msg.robotParams = params;
       node.send(msg);
     });
