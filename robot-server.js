@@ -69,7 +69,8 @@ speech.on('data', function(data) {
 
 const app = express()
 
-app.use(bodyParser.json())
+app.use(bodyParser.json({ type: 'application/json' }))
+app.use(bodyParser.raw({ type: 'application/*' }))
 
 function docomo_chat(payload, callback) {
   if (payload.tone == 'kansai_dialect') {
@@ -138,16 +139,18 @@ function text_to_speech(payload, callback) {
 function speech_to_text(payload, callback) {
   var done = false;
 
-  setTimeout(() => {
-    if (!done) {
-      speech.recording = false;
-      if (callback) callback(null, '');
-      speech.removeListener('data', listener);
-    }
-    done = true;
-  }, payload.timeout);
+  if (payload.timeout != 0) {
+    setTimeout(() => {
+      if (!done) {
+        speech.recording = false;
+        if (callback) callback(null, '');
+        speech.removeListener('data', listener);
+      }
+      done = true;
+    }, payload.timeout);
 
-  speech.recording = true;
+    speech.recording = true;
+  }
 
   function listener(data) {
     if (!done) {
@@ -199,10 +202,22 @@ app.post('/speech-to-text', (req, res) => {
   console.log(req.body);
 
   speech_to_text({
-    timeout: req.body.timeout || 30000,
+    timeout: (typeof req.body.payload.timeout === 'undefined') ? 30000 : req.body.payload.timeout,
   }, (err, data) => {
     res.send(data);
   });
+});
+
+/*
+  speech-to-textノードのデバッグ用
+  Google Speech API に問い合わせないで curl コマンドでメッセージを送信できる
+
+  curlコマンド使用例
+  $ curl -X POST --data 'こんにちは' http://192.168.X.X:3090/debug-speech
+*/
+app.post('/debug-speech', (req, res) => {
+  speech.emit('data', req.body.toString('utf-8'));
+  res.send('OK');
 });
 
 const server = require('http').Server(app);
@@ -250,7 +265,7 @@ io.on('connection', function (socket) {
   socket.on('speech-to-text', function (payload, callback) {
     try {
       speech_to_text({
-        timeout: payload.timeout || 30000,
+        timeout: (typeof payload.timeout === 'undefined') ? 30000 : payload.timeout,
       }, (err, data) => {
         if (callback) callback(data);
       });

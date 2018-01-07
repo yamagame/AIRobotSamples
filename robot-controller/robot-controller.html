@@ -62,6 +62,7 @@
         voice: { value: "keep", required: true, },
         speed: { value: "keep", required: true, },
         volume: { value: "keep", required: true, },
+        tone: { value: "keep", required:true, },
         direction: { value: "keep", required: true, },
         algorithm: { value: "keep", required: true, },
       },
@@ -173,7 +174,7 @@
         voice: { value: "keep", required: true, },
         speed: { value: "keep", required: true, },
         volume: { value: "keep", required: true, },
-        tone: { value: "standard_japanese", required:true, },
+        tone: { value: "keep", required:true, },
         direction: { value: "keep", required: true, },
         silence: { value: false, required: true, },
       },
@@ -704,6 +705,7 @@
     <label for="node-input-tone"><i class="icon-tag"></i> <span data-i18n="common.label.tone"></label>
     <!-- <input type="text" id="node-input-tone" placeholder="Tone"> -->
     <select type="text" id="node-input-tone" style="width:70%;">
+    <option value="keep" data-i18n="common.label.keep"></option>
     <option value="standard_japanese" data-i18n="common.label.standard_japanese"></option>
     <option value="kansai_dialect" data-i18n="common.label.kansai_dialect"></option>
     <option value="baby_talk_japanese" data-i18n="common.label.baby_talk_japanese"></option>

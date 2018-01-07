@@ -4,10 +4,9 @@ cd ~
 sudo apt-get update
 sudo apt-get upgrade -y
 sudo apt-get install npm -y
-sudo apt-get install ibus-anthy -y
-sudo npm install npm@latest -g
 sudo npm install n -g
 sudo n latest
+sudo npm install npm@latest -g
 
 export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)"
 echo "deb http://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
@@ -20,5 +19,6 @@ npm i
 sudo apt-get purge wolfram-engine -y
 sudo apt-get install mecab libmecab-dev mecab-ipadic-utf8 -y
 sudo apt-get install ibus-anthy -y
+sudo apt-get install python-picamera
 
 sudo rpi-update
