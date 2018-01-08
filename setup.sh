@@ -22,4 +22,7 @@ sudo apt-get install ibus-anthy -y
 sudo apt-get install python-picamera
 sudo apt-get install evince -y
 
+pip3 install python3-xlib
+pip3 install pyautogui
+
 sudo rpi-update
