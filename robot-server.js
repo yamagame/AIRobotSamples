@@ -220,6 +220,35 @@ app.post('/debug-speech', (req, res) => {
   res.send('OK');
 });
 
+/*
+  Google Drive の PDFファイルを Documents フォルダにダウンロードする POST リクエスト
+ 
+  curlコマンド使用例
+  curl -X POST -d '{"url":"https://drive.google.com/file/d/[FILE-ID]/view?usp=sharing", "filename":"test.pdf"}' http:/192.168.X.X:3090/download-from-google-drive -H "Content-Type:application/json"
+*/
+app.post('/download-from-google-drive', (req, res) => {
+  try {
+    const s = req.body;
+    const m = s.url.match(/.+\/file\/d\/(.+)\//);
+    if (m !== null) {
+      if (typeof s.filename === 'undefined') {
+        s.filename = 'document.pdf';
+      } else {
+        s.filename = path.basename(s.filename);
+      }
+      const url = `https://drive.google.com/uc?export=download&id=${m[1]}`;
+      const _download = spawn('/usr/bin/curl', [`-o`, path.join(process.env.HOME, 'Documents', s.filename), `-L`, `${url}`]);
+      _download.on('close', function(code) {
+        res.send(`${s.filename}`);
+      });
+    } else {
+      res.send(`NG`);
+    } 
+  } catch(err) {
+    res.send(`NG`);
+  }
+});
+
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
 
