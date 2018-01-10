@@ -7,7 +7,9 @@ const dgram = require('dgram');
 const server = dgram.createSocket('udp4');
 const config = require('./config');
 
-pigpio.configureClock(5, 0);
+if (config.voice_hat) {
+  pigpio.configureClock(5, 0);
+}
 
 var mode = process.env.MODE || 'idle';
 

@@ -20,5 +20,9 @@ sudo apt-get purge wolfram-engine -y
 sudo apt-get install mecab libmecab-dev mecab-ipadic-utf8 -y
 sudo apt-get install ibus-anthy -y
 sudo apt-get install python-picamera
+sudo apt-get install evince -y
+
+pip3 install python3-xlib
+pip3 install pyautogui
 
 sudo rpi-update
