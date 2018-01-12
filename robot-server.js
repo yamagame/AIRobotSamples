@@ -72,6 +72,8 @@ const app = express()
 app.use(bodyParser.json({ type: 'application/json' }))
 app.use(bodyParser.raw({ type: 'application/*' }))
 
+app.use(express.static('public'))
+
 function docomo_chat(payload, callback) {
   if (payload.tone == 'kansai_dialect') {
     var tone = "20";
