@@ -1,6 +1,7 @@
 const EventEmitter = require('events');
 const speech = require('@google-cloud/speech')();
 const mic = require('mic');
+const config = require('./config');
 
 function Speech() {
   var t = new EventEmitter();
@@ -16,8 +17,13 @@ function Speech() {
     interimResults: false // If you want interim results, set this to true
   };
 
+  if (config.voice_hat) {
+    var device = 'plughw:0,0';
+  } else {
+    var device = 'plughw:1,0';
+  }
   var micInstance = mic({
-    'device': 'plughw:0,0',
+    'device': device,
     'rate': '16000',
     'channels': '1',
     'debug': false,
