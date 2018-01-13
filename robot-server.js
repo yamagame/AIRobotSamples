@@ -12,6 +12,7 @@ const { exec, spawn } = require('child_process');
 const path = require('path');
 
 var context = null;
+var quizAnswers = {};
 
 function chat(message, context, tone, callback) {
   const json = {
@@ -251,6 +252,16 @@ app.post('/download-from-google-drive', (req, res) => {
   }
 });
 
+app.post('/command', (req, res) => {
+  if (req.body.type === 'quiz') {
+    if (req.body.action === 'result') {
+      req.body.result = quizAnswers[req.body.quizId];
+    }
+    io.emit('quiz', req.body);
+  }
+  res.send('OK');
+})
+
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
 
@@ -329,6 +340,15 @@ io.on('connection', function (socket) {
   });
   socket.on('message', function(payload, callback) {
     console.log('message', payload);
+    if (callback) callback();
+  });
+  socket.on('quiz', function(payload, callback) {
+    payload.time = new Date();
+    if (quizAnswers[payload.quizId] == null) {
+      quizAnswers[payload.quizId] = {};
+    }
+    quizAnswers[payload.quizId][payload.clientId] = payload;
+    console.log('quiz', payload);
     if (callback) callback();
   });
 });

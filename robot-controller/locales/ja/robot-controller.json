@@ -31,7 +31,11 @@
           "onetime": "ワンタイム",
           "sequential": "シーケンシャル",
           "topic": "トピック名",
-          "priority": "優先度"
+          "priority": "優先度",
+          "repeat": "繰り返し",
+          "step": "ステップ",
+          "increment": "増やす",
+          "decrement": "減らす"
       }
   },
   "mecab": {
@@ -81,6 +85,11 @@
   "topic": {
     "label": {
       "name": "トピック"
+    }
+  },
+  "repeat": {
+    "label": {
+      "name": "繰り返し"
     }
   }
 }

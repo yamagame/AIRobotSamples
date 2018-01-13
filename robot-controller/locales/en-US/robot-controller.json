@@ -31,7 +31,11 @@
           "onetime": "Onetime",
           "sequential": "Sequential",
           "topic": "topic",
-          "priority": "priority"
+          "priority": "priority",
+          "repeat": "Repeat",
+          "step": "Step",
+          "increment": "Increment",
+          "decrement": "Decrement"
       }
   },
   "mecab": {
@@ -81,6 +85,11 @@
   "topic": {
     "label": {
       "name": "topic"
+    }
+  },
+  "repeat": {
+    "label": {
+      "name": "repeat"
     }
   }
 }

@@ -375,6 +375,22 @@
       }
     });
 
+    RED.nodes.registerType('repeat', {
+      category: 'robot',
+      color: '#6abcea',
+      defaults: {
+        name: { value: "", },
+        repetitions: { value: 1, required:true, },
+        step: { value: "inc", required:true, },
+      },
+      inputs: 1,
+      outputs: 2,
+      icon: "feed.png",
+      label: function () {
+        return this.name || "Repeat " + (this.repetitions || "N") + " times" || this._("repeat.label.name");
+      }
+    });
+
   })();
 </script>
 
@@ -852,4 +868,26 @@
 
 <script type="text/x-red" data-help-name="topic">
   <p>トピック</p>
+</script>
+
+<script type="text/x-red" data-template-name="repeat">
+  <div class="form-row">
+    <label for="node-input-name"><i class="icon-tag"></i> <span data-i18n="common.label.name"></label>
+    <input type="text" id="node-input-name" placeholder="Name">
+  </div>
+  <div class="form-row">
+      <label for="node-input-repetitions"><i class="fa fa-undo"></i> <span data-i18n="common.label.repeat"></label>
+      <input type="number" id="node-input-repetitions", style="width:80px">
+  </div>
+  <div class="form-row">
+    <label for="node-input-step"><i class="icon-tag"></i> <span data-i18n="common.label.step"></label>
+    <select type="text" id="node-input-step" style="width:70%;">
+    <option value="inc" data-i18n="common.label.increment"></option>
+    <option value="dec" data-i18n="common.label.decrement"></option>
+    </select>
+  </div>
+</script>
+
+<script type="text/x-red" data-help-name="repeat">
+  <p>繰り返し</p>
 </script>

@@ -106,7 +106,7 @@ class Play {
   delay(time, callback) {
     setTimeout(() => {
       callback(null, 'OK');
-    }, time);
+    }, time * 1000);
   }
 
   nextPage(node, host, callback) {
@@ -177,8 +177,6 @@ class Play {
       var delay = d.match('(\\d+)s') || d.match('(\\d+)秒');
       if (delay == null) {
         delay = d.match('(\\d+)');
-      } else {
-        delay = parseInt(delay)*1000;
       }
       var speed = d.match('(\\d+)speed') || d.match('(\\d+)スピード');
       if (speed == null) {
@@ -779,5 +777,35 @@ module.exports = function(RED) {
     });
   }
   RED.nodes.registerType("topic",TopicNode);
+
+  function RepeatNode(config) {
+    RED.nodes.createNode(this,config);
+    var node = this;
+    node.on("input", function(msg) {
+      node.status({fill:"blue",shape:"dot"});
+      if (!msg.hasOwnProperty('_loopController') || msg._loopController.id !== this.id) {
+        msg._loopController = {
+          loops: 0,
+          remaining: msg.repetitions || config.repetitions,
+          id: this.id
+        };
+      }
+      if (msg._loopController.remaining > 0) {
+        msg._loopController.remaining -= 1;
+        msg._loopController.loops += 1;
+        if (config.step === 'inc') {
+          msg.counter = msg._loopController.loops;
+        } else {
+          msg.counter = msg._loopController.remaining;
+        }
+        node.send(msg);
+        node.status({});
+      } else {
+        node.send([null, msg]);
+        node.status({});
+      }
+    });
+  }
+  RED.nodes.registerType("repeat",RepeatNode);
 
 }
