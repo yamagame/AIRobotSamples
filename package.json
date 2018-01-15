@@ -18,6 +18,9 @@
   },
   "devDependencies": {},
   "scripts": {
+    "robot": "node robot-server.js",
+    "robot-dev": "SPEECH=off node robot-server.js",
+    "servo": "sudo node servo-head.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

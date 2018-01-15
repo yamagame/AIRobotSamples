@@ -2,8 +2,7 @@ const EventEmitter = require('events');
 const express = require('express')
 const bodyParser = require('body-parser')
 const request = require('request');
-const speech = require('./speech');
-//const speech = new EventEmitter();
+const speech = (() => (process.env['SPEECH'] === 'off') ? (new EventEmitter()) : require('./speech'))();
 const talk = require('./talk');
 const dgram = require('dgram');
 const config = require('./config');
