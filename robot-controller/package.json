@@ -13,6 +13,7 @@
   "dependencies": {
     "mecab-async": "^0.1.2",
     "request": "^2.83.0",
+    "mustache": "^2.3.0",
     "socket.io": "^2.0.4"
   }
 }

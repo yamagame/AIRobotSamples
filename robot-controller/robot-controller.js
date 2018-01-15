@@ -413,6 +413,7 @@ class Play {
 module.exports = function(RED) {
   "use strict";
   var net = require('net');
+  var mustache = require("mustache");
 
   function getParams(param, config) {
     if (typeof config === 'undefined') {
@@ -445,20 +446,26 @@ module.exports = function(RED) {
   function RobotListenerNode(config) {
     RED.nodes.createNode(this,config);
     var node = this;
-    node.host = config.host;
+    var nodeUrl = config.host;
+    var isTemplatedUrl = (nodeUrl||"").indexOf("{{") != -1;
+    node.host = nodeUrl;
     node.log(`${node.host}`);
     node.on("input", function(msg) {
       const id = getId(node, 'RobotListenerNode');
-      const socket = createSocket(node.host, id, node, timeout(requestTimeout, (err, socket) => {
+      var url = nodeUrl || msg.url;
+      if (isTemplatedUrl) {
+          url = mustache.render(nodeUrl, msg);
+      }
+      msg.robotHost = url;
+      const socket = createSocket(url, id, node, timeout(requestTimeout, (err, socket) => {
         if (err) {
-          removeSocket(node.host, id, node);
+          removeSocket(url, id, node);
           node.send(msg);
           return;
         }
         setTimeout(() => {
-          removeSocket(node.host, id, node);
+          removeSocket(url, id, node);
         }, connectTimeout);
-        msg.robotHost = node.host;
         node.send(msg);
       }));
     });
