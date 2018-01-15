@@ -303,6 +303,10 @@ io.on('connection', function (socket) {
       console.error(err);
     }
   });
+  socket.on('stop-text-to-speech', function (payload, callback) {
+    talk.flush();
+    if (callback) callback('OK');
+  });
   socket.on('speech-to-text', function (payload, callback) {
     try {
       speech_to_text({
@@ -313,6 +317,10 @@ io.on('connection', function (socket) {
     } catch(err) {
       console.error(err);
     }
+  });
+  socket.on('stop-speech-to-text', function (payload, callback) {
+    speech.emit('data', 'stoped');
+    if (callback) callback('OK');
   });
   socket.on('command', function(payload, callback) {
     try {
@@ -339,6 +347,13 @@ io.on('connection', function (socket) {
   });
   socket.on('message', function(payload, callback) {
     console.log('message', payload);
+    if (callback) callback();
+  });
+  socket.on('quiz-command', function(payload, callback) {
+    if (payload.action === 'result') {
+      payload.result = quizAnswers[payload.quizId];
+    }
+    io.emit('quiz', payload);
     if (callback) callback();
   });
   socket.on('quiz', function(payload, callback) {

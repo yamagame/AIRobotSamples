@@ -80,7 +80,7 @@ function _request(node, action, host, body, callback) {
   const id = getId(node, action);
   const socket = createSocket(host, id, node, timeout(requestTimeout, (err, socket) => {
     if (err) {
-      callback(null, '');
+      if (callback) callback(null, '');
       return;
     }
     node.log('emit '+action);
@@ -88,7 +88,7 @@ function _request(node, action, host, body, callback) {
       setTimeout(() => {
         removeSocket(host, id, node);
       }, connectTimeout);
-      callback(null, data);
+      if (callback) callback(null, data);
     });
   }));
 }
@@ -96,11 +96,19 @@ function _request(node, action, host, body, callback) {
 class Play {
   constructor(){
     this.org_message = null;
+    this.canceled = true;
   }
 
   textToSpeech(node, message, host, params, callback) {
     params.message = message;
     _request(node, 'text-to-speech', host, params, callback);
+  }
+
+  stop(node) {
+    if (this.canceled === false && this.host) {
+      _request(node, 'stop-text-to-speech', this.host, {});
+      this.canceled = true;
+    }
   }
 
   delay(time, callback) {
@@ -137,6 +145,10 @@ class Play {
     }, callback);
   }
 
+  quizCommand(node, host, params, callback) {
+    _request(node, 'quiz-command', host, params, callback);
+  }
+
   doShuffle() {
     for (var i=0;i<this.shuffle.length*10;i++) {
       const a = getRndInteger(0, this.shuffle.length);
@@ -163,12 +175,16 @@ class Play {
     return this.messages;
   }
 
-  request(node, host, params, callback) {
+  request(node, msg, params, callback) {
+    this.canceled = false;
+    const { robotHost } = msg;
+    const host = robotHost;
+    this.host = host;
     const messages = this.getMessage(params.message);
     var cmd = [];
 
     const doCmd = (callback) => {
-      if (cmd.length <= 0) {
+      if (cmd.length <= 0 || this.canceled) {
         callback();
         return;
       }
@@ -206,6 +222,77 @@ class Play {
       } else
       if (d == 'top' || d.indexOf('トップ') >= 0) {
         this.topPage(node, host, (err, res) => {
+          if (err) {
+            callback(err, 'ERR');
+            return;
+          }
+          doCmd(callback);
+        });
+      } else
+      if (d == 'quiz.question' || d.indexOf('クイズ.送信') >= 0) {
+        this.quizCommand(node, host, {
+          action: 'question',
+          question: msg.quiz.question,
+          choices: msg.quiz.choices,
+          time: msg.quiz.timeLimit,
+          answers: [],
+        }, (err, res) => {
+          if (err) {
+            callback(err, 'ERR');
+            return;
+          }
+          doCmd(callback);
+        });
+      } else
+      if (d == 'quiz.start' || d.indexOf('クイズ.開始') >= 0 ||
+          d == 'quiz.countdown' || d.indexOf('クイズ.カウントダウン') >= 0) {
+        this.quizCommand(node, host, {
+          action: 'start',
+          question: msg.quiz.question,
+          choices: msg.quiz.choices,
+          time: msg.counter,
+          answers: [],
+        }, (err, res) => {
+          if (err) {
+            callback(err, 'ERR');
+            return;
+          }
+          doCmd(callback);
+        });
+      } else
+      if (d == 'quiz.answer' || d.indexOf('クイズ.解答') >= 0) {
+        this.quizCommand(node, host, {
+          action: 'answer',
+          question: msg.quiz.question,
+          choices: msg.quiz.choices,
+          answers: msg.quiz.answers,
+        }, (err, res) => {
+          if (err) {
+            callback(err, 'ERR');
+            return;
+          }
+          doCmd(callback);
+        });
+      } else
+      if (d == 'quiz.end' || d.indexOf('クイズ.終了') >= 0) {
+        this.quizCommand(node, host, {
+          action: 'wait',
+        }, (err, res) => {
+          if (err) {
+            callback(err, 'ERR');
+            return;
+          }
+          doCmd(callback);
+        });
+      } else
+      if (d == 'quiz.timeup' || d.indexOf('クイズ.タイムアップ') >= 0) {
+        this.quizCommand(node, host, {
+          action: 'stop',
+          question: msg.quiz.question,
+          choices: msg.quiz.choices,
+          time: 0,
+          answers: [],
+        }, (err, res) => {
           if (err) {
             callback(err, 'ERR');
             return;
@@ -266,7 +353,7 @@ class Play {
     if (params.algorithm === 'shuffle') {
       const ptr = this.shufflePtr;
       var done = false;
-      while (true) {
+      while (!this.canceled) {
         if (this.shufflePtr >= this.shuffle.length) {
           this.shufflePtr = 0;
           break;
@@ -295,7 +382,7 @@ class Play {
       this.doShuffle();
       const ptr = this.shufflePtr;
       var done = false;
-      while (true) {
+      while (!this.canceled) {
         if (this.shufflePtr >= this.shuffle.length) {
           this.shufflePtr = 0;
           break;
@@ -323,7 +410,7 @@ class Play {
     if (params.algorithm === 'onetime') {
       const ptr = this.shufflePtr;
       var done = false;
-      while (true) {
+      while (!this.canceled) {
         if (this.shufflePtr >= messages.length) {
           this.shufflePtr = 0;
           break;
@@ -350,7 +437,7 @@ class Play {
     } else {
       var i = 0;
       const play = () => {
-        if (i >= messages.length) {
+        if (i >= messages.length || this.canceled) {
           callback(null, 'OK');
           return;
         }
@@ -457,19 +544,30 @@ module.exports = function(RED) {
           url = mustache.render(nodeUrl, msg);
       }
       msg.robotHost = url;
+      node.socket_info = {
+        url, id,
+      }
       const socket = createSocket(url, id, node, timeout(requestTimeout, (err, socket) => {
         if (err) {
+          clearTimeout(node.socket_info.timeout);
+          node.socket_info.timeout = null;
           removeSocket(url, id, node);
           node.send(msg);
           return;
         }
-        setTimeout(() => {
+        node.socket_info.timeout = setTimeout(() => {
+          node.socket_info.timeout = null;
           removeSocket(url, id, node);
         }, connectTimeout);
         node.send(msg);
       }));
     });
-    this.on('close', function(removed, done) {
+    node.on('close', function(removed, done) {
+      removeSocket(node.socket_info.url, node.socket_info.id, node);
+      if (node.socket_info.timeout) {
+        clearTimeout(node.socket_info.timeout);
+        node.socket_info.timeout = null;
+      }
       done();
     });
   }
@@ -485,7 +583,7 @@ module.exports = function(RED) {
       msg.robotParams = params;
       node.send(msg);
     });
-    this.on('close', function(removed, done) {
+    node.on('close', function(removed, done) {
       done();
     });
   }
@@ -511,18 +609,23 @@ module.exports = function(RED) {
     node.algorithmPlay = new Play();
     var params = {};
     node.on("input", function(msg) {
+      node.playing = true;
       node.status({fill:"blue",shape:"dot"});
       params.message = msg.payload;
       params = getParams(params, msg.robotParams);
       params = getParams(params, config);
-      node.algorithmPlay.request(node, msg.robotHost, params, function(err, res) {
+      node.algorithmPlay.request(node, msg, params, function(err, res) {
+        if (!node.playing) return;
         node.log(res);
         msg.result = res;
         node.send(msg);
         node.status({});
       });
     });
-    this.on('close', function(removed, done) {
+    node.on('close', function(removed, done) {
+      node.playing = false;
+      node.algorithmPlay.stop(node);
+      node.status({});
       done();
     });
   }
@@ -536,15 +639,21 @@ module.exports = function(RED) {
       param.timeout = config.timeout;
     }
     node.on("input", function(msg) {
+      node.recording = true;
       node.status({fill:"blue",shape:"dot"});
+      node.robotHost = msg.robotHost;
       _request(node, 'speech-to-text', msg.robotHost, param, function(err, res) {
+        if (!node.recording) return;
         node.log(res);
         msg.payload = res;
         node.send(msg);
         node.status({});
       });
     });
-    this.on('close', function(removed, done) {
+    node.on('close', function(removed, done) {
+      node.recording = false;
+      _request(node, 'stop-speech-to-text', node.robotHost, {});
+      node.status({});
       done();
     });
   }
@@ -557,18 +666,23 @@ module.exports = function(RED) {
     var params = {};
     node.utterance = config.utterance;
     node.on("input", function(msg) {
+      node.playing = true;
       node.status({fill:"blue",shape:"dot"});
       params.message = node.utterance;
       params = getParams(params, msg.robotParams);
       params = getParams(params, config);
-      node.algorithmPlay.request(node, msg.robotHost, params, function(err, res) {
+      node.algorithmPlay.request(node, msg, params, function(err, res) {
+        if (!node.playing) return;
         node.log(res);
         msg.result = res;
         node.send(msg);
         node.status({});
       });
     });
-    this.on('close', function(removed, done) {
+    node.on('close', function(removed, done) {
+      node.playing = false;
+      node.algorithmPlay.stop(node);
+      node.status({});
       done();
     });
   }
@@ -591,8 +705,9 @@ module.exports = function(RED) {
         node.status({});
       });
     });
-    this.on('close', function(removed, done) {
+    node.on('close', function(removed, done) {
       done();
+      node.status({});
     });
   }
   RED.nodes.registerType("chat",DocomoChatNode);
@@ -611,8 +726,9 @@ module.exports = function(RED) {
         node.status({});
       });
     });
-    this.on('close', function(removed, done) {
+    node.on('close', function(removed, done) {
       done();
+      node.status({});
     });
   }
   RED.nodes.registerType("command",CommandNode);
@@ -631,8 +747,9 @@ module.exports = function(RED) {
         node.status({});
       });
     });
-    this.on('close', function(removed, done) {
+    node.on('close', function(removed, done) {
       done();
+      node.status({});
     });
   }
   RED.nodes.registerType("open-slide",OpenSlideNode);
@@ -651,8 +768,9 @@ module.exports = function(RED) {
         node.status({});
       });
     });
-    this.on('close', function(removed, done) {
+    node.on('close', function(removed, done) {
       done();
+      node.status({});
     });
   }
   RED.nodes.registerType("next-page",NextPageNode);
@@ -671,8 +789,9 @@ module.exports = function(RED) {
         node.status({});
       });
     });
-    this.on('close', function(removed, done) {
+    node.on('close', function(removed, done) {
       done();
+      node.status({});
     });
   }
   RED.nodes.registerType("close-slide",CloseSlideNode);
@@ -707,8 +826,9 @@ module.exports = function(RED) {
         node.status({});
       });
     });
-    this.on('close', function(removed, done) {
+    node.on('close', function(removed, done) {
       done();
+      node.status({});
     });
   }
   RED.nodes.registerType("mecab",MecabNode);
@@ -733,6 +853,9 @@ module.exports = function(RED) {
       node.context().global.set('topicForks', topicForks);
       node.status({fill:"blue",shape:"dot"});
       node.send(msg);
+      node.status({});
+    });
+    node.on("close", function() {
       node.status({});
     });
   }
@@ -769,6 +892,9 @@ module.exports = function(RED) {
       }
       node.status({});
     });
+    node.on("close", function() {
+      node.status({});
+    });
   }
   RED.nodes.registerType("topic-join",TopicJoinNode);
 
@@ -780,6 +906,9 @@ module.exports = function(RED) {
       msg.topicName = config.topic;
       msg.topicPriority = parseInt(config.priority);
       node.send(msg);
+      node.status({});
+    });
+    node.on("close", function() {
       node.status({});
     });
   }
@@ -811,6 +940,9 @@ module.exports = function(RED) {
         node.send([null, msg]);
         node.status({});
       }
+    });
+    node.on("close", function() {
+      node.status({});
     });
   }
   RED.nodes.registerType("repeat",RepeatNode);
