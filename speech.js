@@ -40,7 +40,7 @@ function Speech() {
         recognizeStream = null;
       }
     } else {
-      if (recognizeStream == null) {
+      if (recognizeStream == null && t.recording) {
         recognizeStream = speech.streamingRecognize(requestOpts)
           .on('error', console.error)
           .on('data', (data) => {
@@ -54,6 +54,11 @@ function Speech() {
       }
       if (t.recording) {
         recognizeStream.write(data);
+      } else {
+        if (recognizeStream) {
+          recognizeStream.end();
+          recognizeStream = null;
+        }
       }
     }
   })

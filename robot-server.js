@@ -9,9 +9,37 @@ const config = require('./config');
 const APIKEY= config.docomo.api_key;
 const { exec, spawn } = require('child_process');
 const path = require('path');
+const fs = require('fs');
+
+const quiz_master = process.env.QUIZ_MASTER || '_quiz_master_';
 
 var context = null;
-var quizAnswers = {};
+
+var robotDataPath = process.argv[2] || 'robot-data.json';
+
+try {
+var robotJson = fs.readFileSync(robotDataPath);
+} catch(err) {
+}
+if (robotJson) {
+  var robotData = JSON.parse(robotJson);
+} else {
+  var robotData = {
+    quizAnswers: {},
+    quizEntry: {},
+  }
+}
+
+var saveTimeout = null;
+
+function writeRobotData() {
+  if (saveTimeout == null) {
+    saveTimeout = setTimeout(() => {
+      fs.writeFileSync(robotDataPath, JSON.stringify(robotData, null, '  '));
+      saveTimeout = null;
+    }, 1000);
+  }
+}
 
 function chat(message, context, tone, callback) {
   const json = {
@@ -251,12 +279,47 @@ app.post('/download-from-google-drive', (req, res) => {
   }
 });
 
+function quizPayload(payload) {
+  // if (payload.action === 'result') {
+  //   payload.result = quizAnswers[payload.question];
+  // }
+  if (payload.action === 'entry') {
+    payload.entry = Object.keys(robotData.quizEntry).map( key => {
+      return {
+        clientId: robotData.quizEntry[key].clientId,
+        name: robotData.quizEntry[key].name,
+      }
+    }).filter( v => v.name != quiz_master );
+    //payload.name = quiz_master;
+  }
+  if (payload.action === 'quiz-entry-init') {
+    robotData.quizEntry = {};
+    writeRobotData();
+    io.emit('quiz', quizPayload({
+      action: 'entry',
+      name: quiz_master,
+    }));
+    setTimeout(() => {
+      io.emit('quiz-reload-entry');
+    }, 3000);
+  }
+  if (payload.action === 'quiz-init') {
+    payload.quizStartTime = new Date();
+  }
+  if (payload.action === 'quiz-ranking') {
+    if (typeof payload.quizId !== 'undefined') {
+      payload.quizAnswers = robotData.quizAnswers[payload.quizId];
+    } else {
+      payload.quizAnswers = robotData.quizAnswers;
+    }
+    payload.name = quiz_master;
+  }
+  return payload;
+}
+
 app.post('/command', (req, res) => {
   if (req.body.type === 'quiz') {
-    if (req.body.action === 'result') {
-      req.body.result = quizAnswers[req.body.quizId];
-    }
-    io.emit('quiz', req.body);
+    io.emit('quiz', quizPayload(req.body));
   }
   res.send('OK');
 })
@@ -350,18 +413,36 @@ io.on('connection', function (socket) {
     if (callback) callback();
   });
   socket.on('quiz-command', function(payload, callback) {
-    if (payload.action === 'result') {
-      payload.result = quizAnswers[payload.quizId];
-    }
-    io.emit('quiz', payload);
+    io.emit('quiz', quizPayload(payload));
     if (callback) callback();
   });
   socket.on('quiz', function(payload, callback) {
     payload.time = new Date();
-    if (quizAnswers[payload.quizId] == null) {
-      quizAnswers[payload.quizId] = {};
+    if (typeof payload.question === 'undefined') {
+      //参加登録
+      if (typeof payload.clientId !== 'undefined') {
+        robotData.quizEntry[payload.clientId] = payload;
+        writeRobotData();
+        io.emit('quiz', quizPayload({
+          action: 'entry',
+          name: quiz_master,
+        }));
+      }
+    } else {
+      if (payload.name === quiz_master) return;
+      let quizId = payload.quizId;
+      if (robotData.quizAnswers[quizId] == null) {
+        robotData.quizAnswers[quizId] = {};
+      }
+      if (robotData.quizAnswers[quizId][payload.question] == null) {
+        robotData.quizAnswers[quizId][payload.question] = {};
+      }
+      const p = { ...payload };
+      delete p.question
+      delete p.quizId
+      robotData.quizAnswers[quizId][payload.question][payload.clientId] = p;
+      writeRobotData();
     }
-    quizAnswers[payload.quizId][payload.clientId] = payload;
     console.log('quiz', payload);
     if (callback) callback();
   });

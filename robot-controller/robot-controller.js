@@ -231,10 +231,12 @@ class Play {
       } else
       if (d == 'quiz.question' || d.indexOf('クイズ.送信') >= 0) {
         this.quizCommand(node, host, {
-          action: 'question',
+          action: 'quiz',
           question: msg.quiz.question,
           choices: msg.quiz.choices,
           time: msg.quiz.timeLimit,
+          pages: msg.quiz.pages,
+          sideImage: msg.quiz.sideImage,
           answers: [],
         }, (err, res) => {
           if (err) {
@@ -299,6 +301,25 @@ class Play {
           }
           doCmd(callback);
         });
+      } else
+      if (d.indexOf('quiz.slide') >= 0 || d.indexOf('クイズ.スライド') >= 0) {
+        const m = d.match(/\/(.+)/);
+        if (m) {
+          this.quizCommand(node, host, {
+            action: 'slide',
+            photo: `${host}/${m[1]}`,
+          }, (err, res) => {
+            if (err) {
+              callback(err, 'ERR');
+              return;
+            }
+            doCmd(callback);
+          });
+        } else {
+          doCmd(callback);
+        }
+      } else
+      if (d.indexOf('quiz.result') >= 0 || d.indexOf('クイズ.結果') >= 0) {
       } else
       if (d == 'marisa' || d.indexOf('魔理沙') >= 0) {
         params.voice = 'marisa';
@@ -664,11 +685,16 @@ module.exports = function(RED) {
     var node = this;
     node.algorithmPlay = new Play();
     var params = {};
-    node.utterance = config.utterance;
+    var utterance = config.utterance;
+    var isTemplatedUrl = (utterance||"").indexOf("{{") != -1;
+    node.utterance = utterance;
     node.on("input", function(msg) {
       node.playing = true;
       node.status({fill:"blue",shape:"dot"});
       params.message = node.utterance;
+      if (isTemplatedUrl) {
+          params.message = mustache.render(node.utterance, msg);
+      }
       params = getParams(params, msg.robotParams);
       params = getParams(params, config);
       node.algorithmPlay.request(node, msg, params, function(err, res) {
