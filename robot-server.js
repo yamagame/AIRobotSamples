@@ -279,6 +279,18 @@ app.post('/download-from-google-drive', (req, res) => {
   }
 });
 
+function changeLed(payload) {
+  if (payload.action === 'off') {
+    servoAction('led-off');
+  }
+  if (payload.action === 'on') {
+    servoAction('led-on');
+  }
+  if (payload.action === 'blink') {
+    servoAction('led-blink');
+  }
+}
+
 function quizPayload(payload) {
   // if (payload.action === 'result') {
   //   payload.result = quizAnswers[payload.question];
@@ -320,6 +332,9 @@ function quizPayload(payload) {
 app.post('/command', (req, res) => {
   if (req.body.type === 'quiz') {
     io.emit('quiz', quizPayload(req.body));
+  }
+  if (req.body.type === 'led') {
+    changeLed(req.body);
   }
   res.send('OK');
 })
@@ -414,6 +429,10 @@ io.on('connection', function (socket) {
   });
   socket.on('quiz-command', function(payload, callback) {
     io.emit('quiz', quizPayload(payload));
+    if (callback) callback();
+  });
+  socket.on('led-command', function(payload, callback) {
+    changeLed(payload);
     if (callback) callback();
   });
   socket.on('quiz', function(payload, callback) {
