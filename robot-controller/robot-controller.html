@@ -30,7 +30,7 @@
         timeout: { value: 30000, validate: RED.validators.number() },
       },
       inputs: 1,
-      outputs: 1,
+      outputs: 2,
       icon: "feed.png",
       label: function () {
         return this.name || this._("speech-to-text.label.name");
@@ -388,6 +388,21 @@
       icon: "feed.png",
       label: function () {
         return this.name || "Repeat " + (this.repetitions || "N") + " times" || this._("repeat.label.name");
+      }
+    });
+
+    RED.nodes.registerType('quiz-button', {
+      category: 'robot',
+      color: '#b8daf4',
+      defaults: {
+        name: { value: "", },
+        timeout: { value: 30000, validate: RED.validators.number() },
+      },
+      inputs: 1,
+      outputs: 2,
+      icon: "feed.png",
+      label: function () {
+        return this.name || this._("quiz-button.label.name");
       }
     });
 
@@ -890,4 +905,19 @@
 
 <script type="text/x-red" data-help-name="repeat">
   <p>繰り返し</p>
+</script>
+
+<script type="text/x-red" data-template-name="quiz-button">
+  <div class="form-row">
+    <label for="node-input-name"><i class="icon-tag"></i> <span data-i18n="common.label.name"></label>
+    <input type="text" id="node-input-name" placeholder="Name">
+  </div>
+  <div class="form-row">
+    <label for="node-input-timeout"><i class="icon-tag"></i> <span data-i18n="common.label.timeout"></label>
+    <input type="text" id="node-input-timeout" placeholder="Timeout">
+  </div>
+</script>
+
+<script type="text/x-red" data-help-name="quiz-button">
+  <p>quiz-button</p>
 </script>

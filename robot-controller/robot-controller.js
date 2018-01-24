@@ -666,8 +666,13 @@ module.exports = function(RED) {
       _request(node, 'speech-to-text', msg.robotHost, param, function(err, res) {
         if (!node.recording) return;
         node.log(res);
-        msg.payload = res;
-        node.send(msg);
+        if (res == '[timeout]') {
+          msg.payload = 'timeout';
+          node.send([null, msg]);
+        } else {
+          msg.payload = res;
+          node.send([msg, null]);
+        }
         node.status({});
       });
     });
@@ -972,5 +977,38 @@ module.exports = function(RED) {
     });
   }
   RED.nodes.registerType("repeat",RepeatNode);
+
+  function QuizButtonNode(config) {
+    RED.nodes.createNode(this,config);
+    var node = this;
+    var param = {};
+    if (typeof config.timeout !== 'undefined') {
+      param.timeout = config.timeout;
+    }
+    node.on("input", function(msg) {
+      node.recording = true;
+      node.status({fill:"blue",shape:"dot"});
+      node.robotHost = msg.robotHost;
+      _request(node, 'quiz-button', msg.robotHost, param, function(err, res) {
+        if (!node.recording) return;
+        node.log(res);
+        if (res == '[timeout]') {
+          msg.payload = 'timeout';
+          node.send([null, msg]);
+        } else {
+          msg.button = res;
+          node.send([msg, null]);
+        }
+        node.status({});
+      });
+    });
+    node.on('close', function(removed, done) {
+      node.recording = false;
+      _request(node, 'stop-quiz-button', node.robotHost, {});
+      node.status({});
+      done();
+    });
+  }
+  RED.nodes.registerType("quiz-button",QuizButtonNode);
 
 }

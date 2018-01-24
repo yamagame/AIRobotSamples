@@ -10,6 +10,7 @@ const APIKEY= config.docomo.api_key;
 const { exec, spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const buttonClient = require('./button-client')();
 
 const quiz_master = process.env.QUIZ_MASTER || '_quiz_master_';
 
@@ -173,7 +174,7 @@ function speech_to_text(payload, callback) {
     setTimeout(() => {
       if (!done) {
         speech.recording = false;
-        if (callback) callback(null, '');
+        if (callback) callback(null, '[timeout]');
         speech.removeListener('data', listener);
       }
       done = true;
@@ -192,6 +193,30 @@ function speech_to_text(payload, callback) {
   }
 
   speech.on('data', listener);
+}
+
+function quiz_button(payload, callback) {
+  var done = false;
+
+  if (payload.timeout != 0) {
+    setTimeout(() => {
+      if (!done) {
+        if (callback) callback(null, '[timeout]');
+        buttonClient.removeListener('button', listener);
+      }
+      done = true;
+    }, payload.timeout);
+  }
+
+  function listener(data) {
+    if (!done) {
+      if (callback) callback(null, data);
+      buttonClient.removeListener('button', listener);
+    }
+    done = true;
+  }
+
+  buttonClient.on('button', listener);
 }
 
 app.post('/docomo-chat', (req, res) => {
@@ -336,6 +361,9 @@ app.post('/command', (req, res) => {
   if (req.body.type === 'led') {
     changeLed(req.body);
   }
+  if (req.body.type === 'button') {
+    buttonClient.doCommand(req.body);
+  }
   res.send('OK');
 })
 
@@ -403,7 +431,7 @@ io.on('connection', function (socket) {
   socket.on('command', function(payload, callback) {
     try {
       const base = path.join(__dirname, 'command');
-      const cmd = path.join(base, payload.command);
+      const cmd = path.normalize(path.join(base, payload.command));
       const args = payload.args || '';
       if (cmd.indexOf(base) == 0) {
       } else {
@@ -435,6 +463,10 @@ io.on('connection', function (socket) {
     changeLed(payload);
     if (callback) callback();
   });
+  socket.on('button-command', function(payload, callback) {
+    buttonClient.doCommand(payload);
+    if (callback) callback();
+  });
   socket.on('quiz', function(payload, callback) {
     payload.time = new Date();
     if (typeof payload.question === 'undefined') {
@@ -464,6 +496,21 @@ io.on('connection', function (socket) {
     }
     console.log('quiz', payload);
     if (callback) callback();
+  });
+  socket.on('quiz-button', function (payload, callback) {
+    try {
+      quiz_button({
+        timeout: (typeof payload.timeout === 'undefined') ? 30000 : payload.timeout,
+      }, (err, data) => {
+        if (callback) callback(data);
+      });
+    } catch(err) {
+      console.error(err);
+    }
+  });
+  socket.on('stop-quiz-button', function (payload, callback) {
+    buttonClient.emit('button', 'stoped');
+    if (callback) callback('OK');
   });
 });
 

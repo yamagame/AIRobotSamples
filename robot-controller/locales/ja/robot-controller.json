@@ -91,5 +91,10 @@
     "label": {
       "name": "繰り返し"
     }
+  },
+  "quiz-button": {
+    "label": {
+      "name": "クイズボタン"
+    }
   }
 }

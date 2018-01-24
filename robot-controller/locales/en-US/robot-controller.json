@@ -91,5 +91,10 @@
     "label": {
       "name": "repeat"
     }
+  },
+  "quiz-button": {
+    "label": {
+      "name": "quiz-button"
+    }
   }
 }
