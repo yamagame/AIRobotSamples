@@ -1,5 +1,3 @@
-const SoftPWM = require('raspi-soft-pwm').SoftPWM;
-const config = require('./config');
 const EventEmitter = require('events');
 
 module.exports = function() {

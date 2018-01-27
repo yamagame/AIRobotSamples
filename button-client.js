@@ -13,7 +13,12 @@ const clients = [
   {
     host:'http://button03.local:3090',
     team:'かめさん',
-  }
+  },
+  {
+    host:'http://localhost:3090',
+    team:'マスター',
+    localhost: true,
+  },
 ]
 
 function ButtonClient() {
@@ -30,7 +35,7 @@ function ButtonClient() {
     if (led_mode == 'on') {
       Object.keys(buttons).forEach( key => {
         const button = buttons[key];
-        if (button.socket) {
+        if (button.socket && !button.localhost) {
           button.socket.emit('led-command', { action: 'on', value: bright });
         }
       });
@@ -38,7 +43,7 @@ function ButtonClient() {
     if (led_mode == 'off') {
       Object.keys(buttons).forEach( key => {
         const button = buttons[key];
-        if (buttons[key].socket) {
+        if (buttons[key].socket && !button.localhost) {
           buttons[key].socket.emit('led-command', { action: 'off', value: bright });
         }
       });
@@ -51,7 +56,7 @@ function ButtonClient() {
       }
       Object.keys(buttons).forEach( key => {
         const button = buttons[key];
-        if (button.socket) {
+        if (button.socket && !button.localhost) {
           button.socket.emit('led-command', { action: 'on', value: bright });
         }
       });
@@ -59,7 +64,7 @@ function ButtonClient() {
     if (led_mode == 'one') {
       Object.keys(buttons).forEach( key => {
         const button = buttons[key];
-        if (button.socket) {
+        if (button.socket && !button.localhost) {
           if (button.host == led_host) {
             button.socket.emit('led-command', { action: 'on', value: bright });
           } else {

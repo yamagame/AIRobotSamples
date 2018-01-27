@@ -1,4 +1,4 @@
 #!/bin/bash
 cd `dirname $0`
-node play-sound.js &
-sudo node button-server.js
+node button-server.js &
+sudo node button-gpio.js

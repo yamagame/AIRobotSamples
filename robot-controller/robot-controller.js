@@ -163,11 +163,15 @@ class Play {
   getMessage(messages) {
     if (this.org_message == null || this.org_message != messages) {
       this.org_message = messages;
+      var n = 0;
       const res = [];
       this.shuffle = [];
       messages.split('\n').forEach( (line, i) => {
-        res.push(line.split(':'));
-        this.shuffle.push(i);
+        if (line != '') {
+          res.push(line.split(':'));
+          this.shuffle.push(n);
+          n++;
+        }
       });
       this.messages = res;
       this.doShuffle();
@@ -371,89 +375,107 @@ class Play {
       }
     }
 
+    function checkMessage(messages) {
+      return messages.some( m => {
+        return (m[0] != '');
+      });
+    }
+
     if (params.algorithm === 'shuffle') {
       const ptr = this.shufflePtr;
       var done = false;
-      while (!this.canceled) {
-        if (this.shufflePtr >= this.shuffle.length) {
-          this.shufflePtr = 0;
-          break;
-        }
-        let msg = messages[this.shuffle[this.shufflePtr]][0];
-        if (msg == '') {
-        } else {
-          if (params.silence) {
-            callback(err, msg);
-          } else {
-            this.textToSpeech(node, msg, host, params, (err, res) => {
-              callback(err, msg);
-            });
+      if (!checkMessage(messages)) {
+        callback(null, '');
+      } else {
+        while (!this.canceled) {
+          if (this.shufflePtr >= this.shuffle.length) {
+            this.shufflePtr = 0;
+            break;
           }
-          done = true;
+          let msg = messages[this.shuffle[this.shufflePtr]][0];
+          if (msg == '') {
+          } else {
+            if (params.silence) {
+              callback(err, msg);
+            } else {
+              this.textToSpeech(node, msg, host, params, (err, res) => {
+                callback(err, msg);
+              });
+            }
+            done = true;
+          }
+          this.shufflePtr++;
+          if (this.shufflePtr >= this.shuffle.length) {
+            this.doShuffle();
+          }
+          //一周するか発話したら終了
+          if (ptr == this.shufflePtr || done) break;
         }
-        this.shufflePtr++;
-        if (this.shufflePtr >= this.shuffle.length) {
-          this.doShuffle();
-        }
-        //一周するか発話したら終了
-        if (ptr == this.shufflePtr || done) break;
       }
     } else
     if (params.algorithm === 'random') {
       this.doShuffle();
       const ptr = this.shufflePtr;
       var done = false;
-      while (!this.canceled) {
-        if (this.shufflePtr >= this.shuffle.length) {
-          this.shufflePtr = 0;
-          break;
-        }
-        let msg = messages[this.shuffle[this.shufflePtr]][0];
-        if (msg == '') {
-        } else {
-          if (params.silence) {
-            callback(err, msg);
-          } else {
-            this.textToSpeech(node, msg, host, params, (err, res) => {
-              callback(err, msg);
-            });
+      if (!checkMessage(messages)) {
+        callback(null, '');
+      } else {
+        while (!this.canceled) {
+          if (this.shufflePtr >= this.shuffle.length) {
+            this.shufflePtr = 0;
+            break;
           }
-          done = true;
+          let msg = messages[this.shuffle[this.shufflePtr]][0];
+          if (msg == '') {
+          } else {
+            if (params.silence) {
+              callback(err, msg);
+            } else {
+              this.textToSpeech(node, msg, host, params, (err, res) => {
+                callback(err, msg);
+              });
+            }
+            done = true;
+          }
+          this.shufflePtr++;
+          if (this.shufflePtr >= this.shuffle.length) {
+            this.doShuffle();
+          }
+          //一周するか発話したら終了
+          if (ptr == this.shufflePtr || done) break;
         }
-        this.shufflePtr++;
-        if (this.shufflePtr >= this.shuffle.length) {
-          this.doShuffle();
-        }
-        //一周するか発話したら終了
-        if (ptr == this.shufflePtr || done) break;
       }
     } else
     if (params.algorithm === 'onetime') {
       const ptr = this.shufflePtr;
       var done = false;
-      while (!this.canceled) {
-        if (this.shufflePtr >= messages.length) {
-          this.shufflePtr = 0;
-          break;
-        }
-        let msg = messages[this.shufflePtr][0];
-        if (msg == '') {
-        } else {
-          if (params.silence) {
-            callback(err, msg);
-          } else {
-            this.textToSpeech(node, msg, host, params, (err, res) => {
-              callback(err, msg);
-            });
+      if (!checkMessage(messages)) {
+        callback(null, '');
+      } else {
+        while (!this.canceled) {
+          if (this.shufflePtr >= messages.length) {
+            this.shufflePtr = 0;
+            break;
           }
-          done = true;
+          let msg = messages[this.shufflePtr][0];
+          if (msg == '') {
+          } else {
+            if (params.silence) {
+              callback(err, msg);
+            } else {
+              this.textToSpeech(node, msg, host, params, (err, res) => {
+                callback(err, msg);
+              });
+            }
+            done = true;
+          }
+          this.shufflePtr++;
+          if (this.shufflePtr >= this.shuffle.length) {
+            this.doShuffle();
+          }
+          //一周するか発話したら終了
+          if (ptr == this.shufflePtr || done) break;
         }
-        this.shufflePtr++;
-        if (this.shufflePtr >= this.shuffle.length) {
-          this.doShuffle();
-        }
-        //一周するか発話したら終了
-        if (ptr == this.shufflePtr || done) break;
       }
     } else {
       var i = 0;
@@ -668,6 +690,10 @@ module.exports = function(RED) {
         node.log(res);
         if (res == '[timeout]') {
           msg.payload = 'timeout';
+          node.send([null, msg]);
+        } else
+        if (res == '[canceled]') {
+          msg.payload = 'canceled';
           node.send([null, msg]);
         } else {
           msg.payload = res;
@@ -896,11 +922,14 @@ module.exports = function(RED) {
     RED.nodes.createNode(this,config);
     var node = this;
     node.on("input", function(msg) {
+      console.log(JSON.stringify(msg, null, '  '));
+      console.log(msg.topicId);
       node.status({fill:"blue",shape:"dot"});
       while (true) {
         if (typeof node.context().global.get('topicForks') !== 'undefined' && typeof msg.topicId !== 'undefined') {
           const topicForks = node.context().global.get('topicForks');
           topicForks[msg.topicId].count --;
+          console.log(`msg.topicName ${msg.topicName}`);
           if (typeof msg.topicPriority !== 'undefined' && topicForks[msg.topicId].priority < msg.topicPriority) {
             topicForks[msg.topicId].priority = msg.topicPriority;
             topicForks[msg.topicId].name = msg.topicName;
@@ -911,10 +940,13 @@ module.exports = function(RED) {
             if (typeof topicForks[msg.topicId].msg.topicName !== 'undefined') {
               node.context().global.set('topic', topicForks[msg.topicId].msg.topicName);
               topicForks[msg.topicId].msg.topic = topicForks[msg.topicId].msg.topicName;
+              node.send(topicForks[msg.topicId].msg);
             } else {
-              node.context().global.set('topic', null);
+              //node.context().global.set('topic', null);
+              node.send(msg);
             }
-            node.send(topicForks[msg.topicId].msg);
+            console.log(msg.topicId);
+            console.log(JSON.stringify(topicForks[msg.topicId].msg, null, '  '));
             break;
           }
         }
@@ -935,7 +967,7 @@ module.exports = function(RED) {
     node.on("input", function(msg) {
       node.status({fill:"blue",shape:"dot"});
       msg.topicName = config.topic;
-      msg.topicPriority = parseInt(config.priority);
+      msg.topicPriority = (msg.topicPriority) ? msg.topicPriority : parseInt(config.priority);
       node.send(msg);
       node.status({});
     });
@@ -994,6 +1026,10 @@ module.exports = function(RED) {
         node.log(res);
         if (res == '[timeout]') {
           msg.payload = 'timeout';
+          node.send([null, msg]);
+        } else
+        if (res == '[canceled]') {
+          msg.payload = 'canceled';
           node.send([null, msg]);
         } else {
           msg.button = res;

@@ -1,0 +1,10 @@
+Description=Cardboard Button Service
+
+[Service]
+ExecStart=/bin/bash -c './button-server.sh'
+WorkingDirectory=/home/pi/AIRobotSamples
+Restart=always
+User=pi
+
+[Install]
+WantedBy=multi-user.target

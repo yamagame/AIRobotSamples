@@ -13,6 +13,7 @@ if (config.voice_hat) {
 
 var mode = process.env.MODE || 'idle';
 var led_mode = process.env.LED_MODE || 'off';
+var buttonLevel = null;
 
 const servo0 = Servo(0.073);	//UP DOWN
 const servo1 = Servo(0.073);	//LEFT RIGHT
@@ -37,6 +38,26 @@ function startServo() {
     action.idle(mode);
     led.idle(led_mode);
   }, 20);
+}
+
+function changeLed(payload) {
+  if (payload.action === 'off') {
+    led_mode = 'off';
+  }
+  if (payload.action === 'on') {
+    led_mode = 'on';
+  }
+  if (payload.action === 'blink') {
+    led_mode = 'blink';
+  }
+  if (payload.action === 'active') {
+    led_mode = 'off';
+  }
+  if (payload.action === 'deactive') {
+    led_mode = 'on';
+  }
+  led_bright = (typeof payload.value !== 'undefined') ? payload.value : led_bright;
+  console.log(`led_mode ${led_mode}led_bright ${led_bright} `);
 }
 
 function startServer() {
@@ -83,4 +104,39 @@ function startServer() {
 raspi.init(() => {
   startServo();
   startServer();
+
+  const app = require('http').createServer(handler)
+  const io = require('socket.io')(app);
+  
+  function handler (req, res) {
+    res.end();
+  }
+
+  app.listen(3091);
+
+  io.on('connection', function (socket) {
+    console.log('connected', socket.id);
+    socket.on('led-command', (payload, callback) => {
+      changeLed(payload);
+      if (callback) callback();
+    });
+    socket.on('disconnect', function () {
+      console.log('disconnect');
+    });
+  });
+
+  var Gpio = require('pigpio').Gpio;
+  var button = new Gpio(23, {
+    mode: Gpio.INPUT,
+    pullUpDown: Gpio.PUD_DOWN,
+    edge: Gpio.EITHER_EDGE
+  })
+  
+  button.on('interrupt', function (level) {
+    if (buttonLevel != level) {
+      buttonLevel = level;
+      io.emit('button', { level: level, state: (level==0) });
+    }
+  });
+
 });

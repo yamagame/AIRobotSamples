@@ -15,6 +15,7 @@ const buttonClient = require('./button-client')();
 const quiz_master = process.env.QUIZ_MASTER || '_quiz_master_';
 
 var context = null;
+var led_mode = 'auto';
 
 var robotDataPath = process.argv[2] || 'robot-data.json';
 
@@ -123,6 +124,9 @@ function docomo_chat(payload, callback) {
       if (payload.silence) {
         if (callback) callback(err, utt);
       } else {
+        if (led_mode == 'auto') {
+          servoAction('led-off');
+        }
         servoAction('talk', payload.direction, () => {
           talk.voice = payload.voice;
           talk.play(utt, {
@@ -130,6 +134,9 @@ function docomo_chat(payload, callback) {
             volume: payload.volume,
             voice: payload.voice,
           }, () => {
+            // if (led_mode == 'auto') {
+            //   servoAction('led-on');
+            // }
             servoAction('idle');
             if (callback) callback(err, utt);
           });
@@ -150,12 +157,18 @@ function text_to_speech(payload, callback) {
       if (callback) callback();
     } else {
       playing = true;
+      if (led_mode == 'auto') {
+        servoAction('led-off');
+      }
       servoAction('talk', payload.direction, () => {
         talk.play(payload.message, {
           speed: payload.speed,
           volume: payload.volume,
           voice: payload.voice,
         }, () => {
+          // if (led_mode == 'auto') {
+          //   servoAction('led-on');
+          // }
           servoAction('idle');
           playing = false;
           if (callback) callback();
@@ -176,6 +189,10 @@ function speech_to_text(payload, callback) {
         speech.recording = false;
         if (callback) callback(null, '[timeout]');
         speech.removeListener('data', listener);
+        speech.removeListener('button', buttonListener);
+        if (led_mode == 'auto') {
+          servoAction('led-off');
+        }
       }
       done = true;
     }, payload.timeout);
@@ -188,11 +205,37 @@ function speech_to_text(payload, callback) {
       speech.recording = false;
       if (callback) callback(null, data);
       speech.removeListener('data', listener);
+      speech.removeListener('button', buttonListener);
+      if (led_mode == 'auto') {
+        servoAction('led-off');
+      }
     }
     done = true;
   }
 
+  function buttonListener(state) {
+    if (state) {
+      if (!done) {
+        speech.recording = false;
+        if (callback) callback(null, '[canceled]');
+        if (led_mode == 'auto') {
+          servoAction('led-off');
+        }
+      }
+      done = true;
+    }
+  }
+
+  if (led_mode == 'auto') {
+    if (payload.timeout > 0) {
+        servoAction('led-on');
+    } else {
+        servoAction('led-off');
+    }
+  }
+
   speech.on('data', listener);
+  speech.on('button', buttonListener);
 }
 
 function quiz_button(payload, callback) {
@@ -305,14 +348,32 @@ app.post('/download-from-google-drive', (req, res) => {
 });
 
 function changeLed(payload) {
+  if (payload.action === 'auto') {
+    led_mode = 'auto';
+  }
   if (payload.action === 'off') {
+    led_mode = 'manual';
     servoAction('led-off');
   }
   if (payload.action === 'on') {
+    led_mode = 'manual';
     servoAction('led-on');
   }
   if (payload.action === 'blink') {
+    led_mode = 'manual';
     servoAction('led-blink');
+  }
+}
+
+function execSoundCommand(payload) {
+  const base = `${process.env.HOME}/Sound`;
+  const p = path.normalize(path.join(base, payload.sound));
+  if (p.indexOf(base) == 0) {
+    console.log(`/usr/bin/aplay ${p}`);
+    const _playone = spawn('/usr/bin/aplay', [p]);
+    _playone.on('close', function(code) {
+      console.log('close', code);
+    });
   }
 }
 
@@ -363,6 +424,9 @@ app.post('/command', (req, res) => {
   }
   if (req.body.type === 'button') {
     buttonClient.doCommand(req.body);
+  }
+  if (req.body.type === 'sound') {
+    execSoundCommand(req.body);
   }
   res.send('OK');
 })
@@ -463,6 +527,10 @@ io.on('connection', function (socket) {
     changeLed(payload);
     if (callback) callback();
   });
+  socket.on('sound-command', (payload, callback) => {
+    execSoundCommand(payload);
+    if (callback) callback();
+  })
   socket.on('button-command', function(payload, callback) {
     buttonClient.doCommand(payload);
     if (callback) callback();
@@ -515,3 +583,12 @@ io.on('connection', function (socket) {
 });
 
 server.listen(3090, () => console.log('Example app listening on port 3090!'))
+
+const gpioSocket = (function() {
+  const io = require('socket.io-client');
+  return io('http://localhost:3091');
+})();
+
+gpioSocket.on('button', (payload) => {
+  speech.emit('button', payload.state);
+});
