@@ -312,6 +312,7 @@ class Play {
           this.quizCommand(node, host, {
             action: 'slide',
             photo: `${host}/${m[1]}`,
+            pages: [],
           }, (err, res) => {
             if (err) {
               callback(err, 'ERR');
@@ -579,7 +580,7 @@ module.exports = function(RED) {
     var nodeUrl = config.host;
     var isTemplatedUrl = (nodeUrl||"").indexOf("{{") != -1;
     node.host = nodeUrl;
-    node.log(`${node.host}`);
+    //node.log(`${node.host}`);
     node.on("input", function(msg) {
       const id = getId(node, 'RobotListenerNode');
       var url = nodeUrl || msg.url;

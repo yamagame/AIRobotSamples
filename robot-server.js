@@ -19,6 +19,14 @@ var led_mode = 'auto';
 
 var robotDataPath = process.argv[2] || 'robot-data.json';
 
+const m = function() {
+  let res = {};
+  for (let i = 0; i < arguments.length; ++i) {
+    if (arguments[i]) Object.assign(res, arguments[i]);
+  }
+  return res;
+};
+
 try {
 var robotJson = fs.readFileSync(robotDataPath);
 } catch(err) {
@@ -26,11 +34,11 @@ var robotJson = fs.readFileSync(robotDataPath);
 if (robotJson) {
   var robotData = JSON.parse(robotJson);
 } else {
-  var robotData = {
-    quizAnswers: {},
-    quizEntry: {},
-  }
+  var robotData = {};
 }
+if (typeof robotData.quizAnswers === 'undefined') robotData.quizAnswers = {};
+if (typeof robotData.quizEntry === 'undefined') robotData.quizEntry = {};
+if (typeof robotData.quizPayload === 'undefined') robotData.quizPayload = {};
 
 var saveTimeout = null;
 
@@ -377,7 +385,7 @@ function execSoundCommand(payload) {
   }
 }
 
-function quizPayload(payload) {
+function quizPacket(payload) {
   // if (payload.action === 'result') {
   //   payload.result = quizAnswers[payload.question];
   // }
@@ -393,13 +401,15 @@ function quizPayload(payload) {
   if (payload.action === 'quiz-entry-init') {
     robotData.quizEntry = {};
     writeRobotData();
-    io.emit('quiz', quizPayload({
+    const result = quizPacket({
       action: 'entry',
       name: quiz_master,
-    }));
+    });
+    io.emit('quiz', result);
     setTimeout(() => {
       io.emit('quiz-reload-entry');
     }, 3000);
+    return result;
   }
   if (payload.action === 'quiz-init') {
     payload.quizStartTime = new Date();
@@ -415,9 +425,38 @@ function quizPayload(payload) {
   return payload;
 }
 
+function storeQuizPayload(payload)
+{
+  if (payload.name !== quiz_master) {
+    robotData.quizPayload['others'] = m(robotData.quizPayload['others'], payload);
+  }
+  robotData.quizPayload[quiz_master] = m(robotData.quizPayload[quiz_master], payload);
+  writeRobotData();
+}
+
+function loadQuizPayload(payload)
+{
+  if (payload.name == quiz_master) {
+    var val = robotData.quizPayload[quiz_master] || {};
+  } else {
+    var val = robotData.quizPayload['others'] || {};
+  }
+  return m(val, { initializeLoad: true, });
+}
+
 app.post('/command', (req, res) => {
   if (req.body.type === 'quiz') {
-    io.emit('quiz', quizPayload(req.body));
+    const payload = quizPacket(req.body);
+    storeQuizPayload(payload);
+    io.emit('quiz', payload);
+    if (req.body.action == 'quiz-ranking') {
+      res.send(payload.quizAnswers);
+      return;
+    }
+    if (req.body.action == 'quiz-init') {
+      res.send(payload.quizStartTime);
+      return;
+    }
   }
   if (req.body.type === 'led') {
     changeLed(req.body);
@@ -520,7 +559,9 @@ io.on('connection', function (socket) {
     if (callback) callback();
   });
   socket.on('quiz-command', function(payload, callback) {
-    io.emit('quiz', quizPayload(payload));
+    const result = quizPacket(payload);
+    storeQuizPayload(result);
+    io.emit('quiz', result);
     if (callback) callback();
   });
   socket.on('led-command', function(payload, callback) {
@@ -542,10 +583,11 @@ io.on('connection', function (socket) {
       if (typeof payload.clientId !== 'undefined') {
         robotData.quizEntry[payload.clientId] = payload;
         writeRobotData();
-        io.emit('quiz', quizPayload({
+        io.emit('quiz', quizPacket({
           action: 'entry',
           name: quiz_master,
         }));
+        socket.emit('quiz', loadQuizPayload(payload));
       }
     } else {
       if (payload.name === quiz_master) return;
@@ -562,7 +604,6 @@ io.on('connection', function (socket) {
       robotData.quizAnswers[quizId][payload.question][payload.clientId] = p;
       writeRobotData();
     }
-    console.log('quiz', payload);
     if (callback) callback();
   });
   socket.on('quiz-button', function (payload, callback) {
