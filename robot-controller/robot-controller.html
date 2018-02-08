@@ -252,6 +252,7 @@
       defaults: {
         name: { value: "", },
         intent: { value: "", },
+        priority: { value: 10, validate:RED.validators.number(true) },
         pattern: { value: "", },
       },
       inputs: 1,
@@ -356,6 +357,21 @@
       icon: "feed.png",
       label: function () {
         return this.name || this._("topic-join.label.name");
+      }
+    });
+
+    RED.nodes.registerType('topic-priority', {
+      category: 'robot',
+      color: '#6abcea',
+      defaults: {
+        name: { value: "", },
+        priority: { value: 10, required:true, validate:RED.validators.number() },
+      },
+      inputs: 1,
+      outputs: 1,
+      icon: "feed.png",
+      label: function () {
+        return this.name || this._("topic-priority.label.name")+((this.priority > 0) ? '+'+this.priority : this.priority);
       }
     });
 
@@ -827,6 +843,10 @@
     <label for="node-input-intent"><i class="icon-tag"></i> <span data-i18n="common.label.intent"></label>
     <input type="text" id="node-input-intent" placeholder="Intent">
   </div>
+  <div class="form-row">
+    <label for="node-input-priority"><i class="icon-tag"></i> <span data-i18n="common.label.priority"></label>
+    <input type="text" id="node-input-priority" placeholder="Priority">
+  </div>
   <div class="form-row" style="margin-bottom: 0px;">
     <label for="node-input-pattern"><i class="fa fa-wrench"></i> <span data-i18n="common.label.pattern"></label>
     <input type="hidden" id="node-input-pattern" autofocus="autofocus">
@@ -866,6 +886,21 @@
   <p>トピック結合</p>
 </script>
 
+<script type="text/x-red" data-template-name="topic-priority">
+  <div class="form-row">
+    <label for="node-input-name"><i class="icon-tag"></i> <span data-i18n="common.label.name"></label>
+    <input type="text" id="node-input-name" placeholder="Name">
+  </div>
+  <div class="form-row">
+    <label for="node-input-priority"><i class="icon-tag"></i> <span data-i18n="common.label.priority"></label>
+    <input type="text" id="node-input-priority" placeholder="Priority">
+  </div>
+</script>
+
+<script type="text/x-red" data-help-name="topic-priority">
+  <p>トピック優先</p>
+</script>
+
 <script type="text/x-red" data-template-name="topic">
   <div class="form-row">
     <label for="node-input-name"><i class="icon-tag"></i> <span data-i18n="common.label.name"></label>
@@ -875,10 +910,10 @@
     <label for="node-input-topic"><i class="icon-tag"></i> <span data-i18n="common.label.topic"></label>
     <input type="text" id="node-input-topic" placeholder="Topic">
   </div>
-  <div class="form-row">
+  <!-- <div class="form-row">
     <label for="node-input-priority"><i class="icon-tag"></i> <span data-i18n="common.label.priority"></label>
     <input type="text" id="node-input-priority" placeholder="Priority">
-  </div>
+  </div> -->
 </script>
 
 <script type="text/x-red" data-help-name="topic">

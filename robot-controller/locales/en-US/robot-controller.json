@@ -82,6 +82,11 @@
       "name": "topic-join"
     }
   },
+  "topic-priority": {
+    "label": {
+      "name": "pri"
+    }
+  },
   "topic": {
     "label": {
       "name": "topic"

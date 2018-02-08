@@ -180,6 +180,10 @@ class Play {
   }
 
   request(node, msg, params, callback) {
+    if (params.silence) {
+      callback(null, 'OK');
+      return;
+    }
     this.canceled = false;
     const { robotHost } = msg;
     const host = robotHost;
@@ -733,6 +737,7 @@ module.exports = function(RED) {
         if (!node.playing) return;
         node.log(res);
         msg.result = res;
+        msg.payload = params.message;
         node.send(msg);
         node.status({});
       });
@@ -867,19 +872,37 @@ module.exports = function(RED) {
     } else {
       node.intent = config.intent;
     }
+    if (typeof config.priority === 'undefined') {
+      //node.priority =　0;
+    } else {
+      node.priority = config.priority;
+    }
+    const wireNum = config.wires[1].length;
     node.on("input", function(msg) {
       node.status({fill:"blue",shape:"dot"});
       mecab_proc(msg.payload, [ [node.intent, node.pattern], ] , function(err, res) {
-        node.log(res);
+        //node.log(res);
         msg.subject = res.subject;
         msg.subjects = res.subjects;
         if (res.intent !== '') {
           msg.intent = res.intent;
         }
         if (res.match) {
-          node.send([msg, null]);
+          if (typeof node.priority !== 'undefined') {
+            if (typeof msg.topicPriority === 'undefined') {
+              msg.topicPriority = 0;
+            }
+            msg.topicPriority = msg.topicPriority + parseInt(node.priority);
+          }
+        }
+        if (wireNum > 0) {
+          if (res.match) {
+            node.send([msg, null]);
+          } else {
+            node.send([null, msg]);
+          }
         } else {
-          node.send([null, msg]);
+          node.send([msg, null]);
         }
         node.status({});
       });
@@ -923,14 +946,14 @@ module.exports = function(RED) {
     RED.nodes.createNode(this,config);
     var node = this;
     node.on("input", function(msg) {
-      console.log(JSON.stringify(msg, null, '  '));
-      console.log(msg.topicId);
+      // console.log(JSON.stringify(msg, null, '  '));
+      // console.log(msg.topicId);
       node.status({fill:"blue",shape:"dot"});
       while (true) {
         if (typeof node.context().global.get('topicForks') !== 'undefined' && typeof msg.topicId !== 'undefined') {
           const topicForks = node.context().global.get('topicForks');
           topicForks[msg.topicId].count --;
-          console.log(`msg.topicName ${msg.topicName}`);
+          // console.log(`msg.topicName ${msg.topicName}`);
           if (typeof msg.topicPriority !== 'undefined' && topicForks[msg.topicId].priority < msg.topicPriority) {
             topicForks[msg.topicId].priority = msg.topicPriority;
             topicForks[msg.topicId].name = msg.topicName;
@@ -938,16 +961,19 @@ module.exports = function(RED) {
           }
           node.context().global.set('topicForks', topicForks);
           if (topicForks[msg.topicId].count <= 0) {
-            if (typeof topicForks[msg.topicId].msg.topicName !== 'undefined') {
+            if (typeof topicForks[msg.topicId].msg.topicName !== 'undefined' && topicForks[msg.topicId].msg.topicPriority !== 0) {
               node.context().global.set('topic', topicForks[msg.topicId].msg.topicName);
               topicForks[msg.topicId].msg.topic = topicForks[msg.topicId].msg.topicName;
               node.send(topicForks[msg.topicId].msg);
             } else {
               //node.context().global.set('topic', null);
+              if (msg.topicPriority === 0) {
+                delete msg.topicName;
+              }
               node.send(msg);
             }
-            console.log(msg.topicId);
-            console.log(JSON.stringify(topicForks[msg.topicId].msg, null, '  '));
+            // console.log(JSON.stringify(msg, null, '  '));
+            // console.log(JSON.stringify(topicForks[msg.topicId].msg, null, '  '));
             break;
           }
         }
@@ -962,13 +988,30 @@ module.exports = function(RED) {
   }
   RED.nodes.registerType("topic-join",TopicJoinNode);
 
+  function TopicPriorityNode(config) {
+    RED.nodes.createNode(this,config);
+    var node = this;
+    node.on("input", function(msg) {
+      if (typeof msg.topicPriority === 'undefined') {
+        msg.topicPriority = 0;
+      }
+      msg.topicPriority = msg.topicPriority + parseInt(config.priority);
+      node.send(msg);
+      node.status({});
+    });
+    node.on("close", function() {
+      node.status({});
+    });
+  }
+  RED.nodes.registerType("topic-priority",TopicPriorityNode);
+
   function TopicNode(config) {
     RED.nodes.createNode(this,config);
     var node = this;
     node.on("input", function(msg) {
       node.status({fill:"blue",shape:"dot"});
       msg.topicName = config.topic;
-      msg.topicPriority = (msg.topicPriority) ? msg.topicPriority : parseInt(config.priority);
+      msg.topicPriority = (typeof msg.topicPriority !== 'undefined') ? msg.topicPriority : parseInt(config.priority);
       node.send(msg);
       node.status({});
     });

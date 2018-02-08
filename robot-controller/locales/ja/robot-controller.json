@@ -82,6 +82,11 @@
       "name": "トピック結合"
     }
   },
+  "topic-priority": {
+    "label": {
+      "name": "優先"
+    }
+  },
   "topic": {
     "label": {
       "name": "トピック"
