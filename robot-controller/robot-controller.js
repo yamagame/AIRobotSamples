@@ -862,11 +862,7 @@ module.exports = function(RED) {
   function MecabNode(config) {
     RED.nodes.createNode(this,config);
     var node = this;
-    if (config.pattern) {
-      node.pattern = config.pattern.split('\n').filter( v => v != '' );
-    } else {
-      node.pattern = [];
-    }
+    var isTemplatedUrl = (config.pattern||"").indexOf("{{") != -1;
     if (typeof config.intent === 'undefined') {
       node.intent = '';
     } else {
@@ -879,6 +875,15 @@ module.exports = function(RED) {
     }
     const wireNum = config.wires[1].length;
     node.on("input", function(msg) {
+      if (config.pattern) {
+        var pattern = config.pattern;
+        if (isTemplatedUrl) {
+            pattern = mustache.render(config.pattern, msg);
+        }
+        node.pattern = pattern.split('\n').filter( v => v != '' );
+      } else {
+        node.pattern = [];
+      }
       node.status({fill:"blue",shape:"dot"});
       mecab_proc(msg.payload, [ [node.intent, node.pattern], ] , function(err, res) {
         //node.log(res);
@@ -1011,7 +1016,7 @@ module.exports = function(RED) {
     node.on("input", function(msg) {
       node.status({fill:"blue",shape:"dot"});
       msg.topicName = config.topic;
-      msg.topicPriority = (typeof msg.topicPriority !== 'undefined') ? msg.topicPriority : parseInt(config.priority);
+      msg.topicPriority = (typeof msg.topicPriority !== 'undefined') ? msg.topicPriority : 0;
       node.send(msg);
       node.status({});
     });

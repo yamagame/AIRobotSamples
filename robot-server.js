@@ -655,3 +655,14 @@ const gpioSocket = (function() {
 gpioSocket.on('button', (payload) => {
   speech.emit('button', payload.state);
 });
+
+const io_client = require('socket.io-client');
+const client_socket = io_client('http://localhost:4010');
+
+client_socket.on('connect', () => {
+  console.log('connected');
+});
+
+client_socket.on('sheet', (sheetData) => {
+  io.emit('sheet', { sheet: sheetData });
+});
