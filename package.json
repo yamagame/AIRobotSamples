@@ -10,6 +10,7 @@
     "express": "^4.16.2",
     "mecab-async": "^0.1.2",
     "mic": "^2.1.2",
+    "ps-tree": "^1.1.0",
     "mustache": "^2.3.0",
     "raspi": "^5.0.1",
     "raspi-gpio": "^5.0.0",

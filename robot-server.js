@@ -464,6 +464,16 @@ app.post('/command', (req, res) => {
   if (req.body.type === 'button') {
     buttonClient.doCommand(req.body);
   }
+  if (req.body.type === 'movie') {
+    if (playerSocket) {
+      playerSocket.emit('movie', req.body, (data) => {
+        res.send(data);
+      });
+      return;
+    } else {
+      res.send({ state: 'none' });
+    }
+  }
   if (req.body.type === 'sound') {
     execSoundCommand(req.body);
   }
@@ -472,6 +482,18 @@ app.post('/command', (req, res) => {
 
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
+
+const iop = io.of('player');
+var playerSocket = null;
+
+iop.on('connection', function (socket) {
+  console.log('connected iop');
+  playerSocket = socket;
+  socket.on('disconnect', function () {
+    playerSocket = null;
+    console.log('disconnect iop');
+  });
+});
 
 io.on('connection', function (socket) {
   console.log('connected');
