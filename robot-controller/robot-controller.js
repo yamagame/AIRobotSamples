@@ -701,8 +701,15 @@ module.exports = function(RED) {
           msg.payload = 'canceled';
           node.send([null, msg]);
         } else {
-          msg.payload = res;
-          node.send([msg, null]);
+          if (res.button) {
+            msg.payload = 'button';
+            msg.button = res;
+            delete res.button;
+            node.send([null, msg]);
+          } else {
+            msg.payload = res;
+            node.send([msg, null]);
+          }
         }
         node.status({});
       });

@@ -4,18 +4,22 @@ const EventEmitter = require('events');
 const clients = [
   {
     host:'http://button01.local:3090',
+    name:'button01',
     team:'くまさん',
   },
   {
     host:'http://button02.local:3090',
+    name:'button02',
     team:'うさぎさん',
   },
   {
     host:'http://button03.local:3090',
+    name:'button03',
     team:'かめさん',
   },
   {
     host:'http://localhost:3090',
+    name:'master',
     team:'マスター',
     localhost: true,
   },

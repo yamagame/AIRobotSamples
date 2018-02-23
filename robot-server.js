@@ -191,13 +191,20 @@ function text_to_speech(payload, callback) {
 function speech_to_text(payload, callback) {
   var done = false;
 
+  led_mode = 'auto';
+
+  function removeListener() {
+    speech.removeListener('data', listener);
+    speech.removeListener('button', buttonListener);
+    buttonClient.removeListener('button', listener);
+  }
+
   if (payload.timeout != 0) {
     setTimeout(() => {
       if (!done) {
         speech.recording = false;
+        removeListener();
         if (callback) callback(null, '[timeout]');
-        speech.removeListener('data', listener);
-        speech.removeListener('button', buttonListener);
         if (led_mode == 'auto') {
           servoAction('led-off');
         }
@@ -211,9 +218,8 @@ function speech_to_text(payload, callback) {
   function listener(data) {
     if (!done) {
       speech.recording = false;
+      removeListener();
       if (callback) callback(null, data);
-      speech.removeListener('data', listener);
-      speech.removeListener('button', buttonListener);
       if (led_mode == 'auto') {
         servoAction('led-off');
       }
@@ -225,6 +231,7 @@ function speech_to_text(payload, callback) {
     if (state) {
       if (!done) {
         speech.recording = false;
+        removeListener();
         if (callback) callback(null, '[canceled]');
         if (led_mode == 'auto') {
           servoAction('led-off');
@@ -232,6 +239,18 @@ function speech_to_text(payload, callback) {
       }
       done = true;
     }
+  }
+
+  function listenerButton(data) {
+    if (!done) {
+      data.button = true;
+      removeListener();
+      if (callback) callback(null, data);
+      if (led_mode == 'auto') {
+        servoAction('led-off');
+      }
+    }
+    done = true;
   }
 
   if (led_mode == 'auto') {
@@ -242,6 +261,7 @@ function speech_to_text(payload, callback) {
     }
   }
 
+  buttonClient.on('button', listenerButton);
   speech.on('data', listener);
   speech.on('button', buttonListener);
 }
