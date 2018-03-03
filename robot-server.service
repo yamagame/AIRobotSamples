@@ -3,6 +3,7 @@ Description=Cardboard Robot Service
 [Service]
 ExecStart=/bin/bash -c './robot-server.sh'
 WorkingDirectory=/home/pi/AIRobotSamples
+#EnvironmentFile=-/etc/default/robot-server
 Restart=always
 User=pi
 

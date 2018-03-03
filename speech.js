@@ -6,6 +6,7 @@ const config = require('./config');
 function Speech() {
   var t = new EventEmitter();
   t.recording = true;
+  t.writing = true;
 
   const requestOpts = {
     config: {
@@ -49,10 +50,13 @@ function Speech() {
               const alternatives = data.results[0].alternatives.map(v => v);
               const sentence = alternatives.shift();
               t.emit('data', sentence.transcript);
+              if (!t.writing) {
+                t.recording = false;
+              }
             }
           })
       }
-      if (t.recording) {
+      if (t.recording && t.writing) {
         recognizeStream.write(data);
       } else {
         if (recognizeStream) {
@@ -69,18 +73,22 @@ function Speech() {
 
   micInputStream.on('startComplete', function () {
     console.log("Got SIGNAL startComplete");
+    t.status = 'start';
   });
 
   micInputStream.on('stopComplete', function () {
     console.log("Got SIGNAL stopComplete");
+    t.status = 'stop';
   });
 
   micInputStream.on('pauseComplete', function () {
     console.log("Got SIGNAL pauseComplete");
+    t.status = 'pause';
   });
 
   micInputStream.on('resumeComplete', function () {
     console.log("Got SIGNAL resumeComplete");
+    t.status = 'start';
   });
 
   micInputStream.on('silence', function () {

@@ -1,0 +1,11 @@
+Description=Voice Bot Service
+
+[Service]
+ExecStart=/bin/bash -c './voice-bot.sh'
+WorkingDirectory=/home/pi/AIRobotSamples
+#EnvironmentFile=-/etc/default/voice-bot
+Restart=always
+User=pi
+
+[Install]
+WantedBy=multi-user.target
