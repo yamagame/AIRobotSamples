@@ -27,6 +27,9 @@ function changeLed(payload) {
   if (payload.action === 'blink') {
     led_mode = 'blink';
   }
+  if (payload.action === 'power') {
+    led_mode = 'power';
+  }
   if (payload.action === 'active') {
     led_mode = 'off';
   }

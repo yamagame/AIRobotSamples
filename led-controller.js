@@ -7,6 +7,7 @@ module.exports = function() {
   t.max = 1;
   t.mode = 'off';
   t.blinkSpeed = 0.025;
+  t.power_timer = 0;
   t.theta = 0;
   t.idle = function(mode, value = 1) {
     const now = t.now;
@@ -20,12 +21,26 @@ module.exports = function() {
       if (mode == 'blink') {
         t.mode = mode;
       }
+      if (mode == 'power') {
+        t.mode = mode;
+        t.power_timer = 50*10000;
+      }
     }
     if (t.mode == 'off') {
       t.now = 0;
     }
     if (t.mode == 'on') {
       t.now = t.max;
+    }
+    if (t.mode == 'power') {
+      if (t.power_timer > 0) {
+        if ((t.power_timer % 50) < 25) {
+          t.now = 0;
+        } else {
+          t.now = t.max;
+        }
+        t.power_timer --;
+      }
     }
     if (t.mode == 'blink') {
       t.now = (Math.sin(t.theta)+1)*t.max/2;

@@ -195,6 +195,7 @@ function speech_to_text(payload, callback) {
 
   function removeListener() {
     speech.removeListener('data', listener);
+    speech.removeListener('speech', speechListener);
     speech.removeListener('button', buttonListener);
     buttonClient.removeListener('button', listener);
   }
@@ -220,6 +221,22 @@ function speech_to_text(payload, callback) {
       speech.recording = false;
       removeListener();
       if (callback) callback(null, data);
+      if (led_mode == 'auto') {
+        servoAction('led-off');
+      }
+    }
+    done = true;
+  }
+
+  function speechListener(data) {
+    if (!done) {
+      var retval = {
+        speechRequest: true,
+        payload: data,
+      }
+      speech.recording = false;
+      removeListener();
+      if (callback) callback(null, retval);
       if (led_mode == 'auto') {
         servoAction('led-off');
       }
@@ -263,6 +280,7 @@ function speech_to_text(payload, callback) {
 
   buttonClient.on('button', listenerButton);
   speech.on('data', listener);
+  speech.on('speech', speechListener);
   speech.on('button', buttonListener);
 }
 
@@ -343,6 +361,11 @@ app.post('/speech-to-text', (req, res) => {
 */
 app.post('/debug-speech', (req, res) => {
   speech.emit('data', req.body.toString('utf-8'));
+  res.send('OK');
+});
+
+app.post('/speech', (req, res) => {
+  speech.emit('speech', req.body.toString('utf-8'));
   res.send('OK');
 });
 

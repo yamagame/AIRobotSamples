@@ -692,6 +692,7 @@ module.exports = function(RED) {
       node.robotHost = msg.robotHost;
       _request(node, 'speech-to-text', msg.robotHost, param, function(err, res) {
         if (!node.recording) return;
+        node.recording = false;
         node.log(res);
         if (res == '[timeout]') {
           msg.payload = 'timeout';
@@ -706,8 +707,14 @@ module.exports = function(RED) {
             msg.button = res;
             delete res.button;
             node.send([null, msg]);
+          } else
+          if (res.speechRequest) {
+            msg.speechRequest = true;
+            msg.payload = res.payload;
+            node.send([msg, null]);
           } else {
             msg.payload = res;
+            delete msg.speechRequest;
             node.send([msg, null]);
           }
         }
@@ -1079,6 +1086,7 @@ module.exports = function(RED) {
       node.robotHost = msg.robotHost;
       _request(node, 'quiz-button', msg.robotHost, param, function(err, res) {
         if (!node.recording) return;
+        node.recording = false;
         node.log(res);
         if (res == '[timeout]') {
           msg.payload = 'timeout';
