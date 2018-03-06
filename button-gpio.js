@@ -69,6 +69,14 @@ if (raspiMode) {
         io.emit('button', { level: level, state: (level==0) });
       }
     });
+    
+    setInterval(() => {
+      const level = button.digitalRead();
+      if (buttonLevel != level) {
+        buttonLevel = level;
+        io.emit('button', { level: level, state: (level==0) });
+      }
+    }, 1000)
   });
 }
 

@@ -17,7 +17,8 @@ speech.on('data', function(data) {
     },
     body: data,
   }, function(err, res, body) {
-    console.log(body);
+    if (!err) resetSleep();
+    console.log(body, parseInt(speech.recordingTime/1000));
   });
 });
 
@@ -30,33 +31,50 @@ speech.writing = false;
 var sleepTimer = null;
 var shutdownTimer = null;
 var shutdownLEDTimer = null;
+var initialized = false;
+
+function resetSleep() {
+  if (sleepTimer) clearTimeout(sleepTimer);
+  //3分でスリープ
+  if (speech.writing) {
+    sleepTimer = setTimeout(() => {
+      speech.writing = false;
+      socket.emit('led-command', { action: 'blink' });
+    }, 3*60*1000);
+  }
+}
 
 socket.on('button', (payload) => {
   console.log(payload);
-  if (shutdownTimer) clearTimeout(shutdownTimer);
-  if (shutdownLEDTimer) clearTimeout(shutdownLEDTimer);
+  if (shutdownTimer) {
+    clearTimeout(shutdownTimer);
+    shutdownTimer = null;
+  }
+  if (shutdownLEDTimer) {
+    clearTimeout(shutdownLEDTimer);
+    shutdownLEDTimer = null;
+  }
   if (payload.state) {
     if (shutdownTimer) clearTimeout(shutdownTimer);
     speech.writing = (speech.writing == false)
-    if (sleepTimer) clearTimeout(sleepTimer);
     if (speech.writing) {
       speech.recording = true;
-      //3分でスリープ
-      sleepTimer = setTimeout(() => {
-        speech.writing = false;
-        socket.emit('led-command', { action: 'blink' });
-      }, 3*60*1000);
     }
+    resetSleep();
     //５秒間押し続け
     shutdownTimer = setTimeout(() => {
       socket.emit('led-command', { action: 'power' });
       //さらに５秒間押し続け
+      if (shutdownLEDTimer) {
+        clearTimeout(shutdownLEDTimer);
+        shutdownLEDTimer = null;
+      }
       shutdownLEDTimer = setTimeout(() => {
         socket.emit('led-command', { action: 'on' });
         //シャットダウン
         const _playone = spawn('/usr/bin/sudo', ['shutdown', 'now']);
         _playone.on('close', function(code) {
-          console.log('shutdonw done');
+          console.log('shutdown done');
         });
       }, 5*1000);
     }, 5*1000);
@@ -65,9 +83,11 @@ socket.on('button', (payload) => {
 });
 
 socket.on('connect', () => {
+  if (initialized) return;
+  initialized = true;
+  socket.emit('led-command', { action: 'power' });
   const interval = setInterval(() => {
     if (speech.status == 'start') {
-      socket.emit('led-command', { action: 'power' });
       setTimeout(() => {
         socket.emit('led-command', { action: 'blink' });
       }, 20000);

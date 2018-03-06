@@ -7,6 +7,7 @@ function Speech() {
   var t = new EventEmitter();
   t.recording = true;
   t.writing = true;
+  t.recordingTime = 0;
 
   const requestOpts = {
     config: {
@@ -33,15 +34,21 @@ function Speech() {
   var micInputStream = micInstance.getAudioStream();
 
   var recognizeStream = null;
+  var startTime = 0;
 
   micInputStream.on('data', function (data) {
     if (micInputStream.incrConsecSilenceCount() > micInputStream.getNumSilenceFramesExitThresh()) {
       if (recognizeStream) {
         recognizeStream.end();
         recognizeStream = null;
+        if (startTime > 0) {
+          t.recordingTime += (new Date()).getTime() - startTime;
+          startTime = 0;
+        }
       }
     } else {
       if (recognizeStream == null && t.recording) {
+        startTime = (new Date()).getTime();
         recognizeStream = speech.streamingRecognize(requestOpts)
           .on('error', console.error)
           .on('data', (data) => {
@@ -62,6 +69,10 @@ function Speech() {
         if (recognizeStream) {
           recognizeStream.end();
           recognizeStream = null;
+          if (startTime > 0) {
+            t.recordingTime += (new Date()).getTime() - startTime;
+            startTime = 0;
+          }
         }
       }
     }
