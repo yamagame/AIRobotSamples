@@ -13,6 +13,7 @@ if (config.voice_hat) {
 
 var mode = process.env.MODE || 'idle';
 var led_mode = process.env.LED_MODE || 'off';
+var led_bright = process.env.LED_VALUE || 1;
 var buttonLevel = null;
 
 const servo0 = Servo(0.073);	//UP DOWN
@@ -50,6 +51,9 @@ function changeLed(payload) {
   if (payload.action === 'blink') {
     led_mode = 'blink';
   }
+  if (payload.action === 'power') {
+    led_mode = 'power';
+  }
   if (payload.action === 'active') {
     led_mode = 'off';
   }
@@ -57,7 +61,7 @@ function changeLed(payload) {
     led_mode = 'on';
   }
   led_bright = (typeof payload.value !== 'undefined') ? payload.value : led_bright;
-  console.log(`led_mode ${led_mode}led_bright ${led_bright} `);
+  console.log(`led_mode ${led_mode} led_bright ${led_bright} `);
 }
 
 function startServer() {
@@ -69,7 +73,7 @@ function startServer() {
   server.on('message', (data, rinfo) => {
     console.log(`server got: ${data} from ${rinfo.address}:${rinfo.port}`);
     try {
-      if (data == 'talk' || data == 'idle') {
+      if (data == 'talk' || data == 'idle' || data == 'stop') {
         mode = data;
       } else
       if (data == 'led-on' || data == 'led-off' || data == 'led-blink') {
@@ -139,4 +143,11 @@ raspi.init(() => {
     }
   });
 
+  setInterval(() => {
+    const level = button.digitalRead();
+    if (buttonLevel != level) {
+      buttonLevel = level;
+      io.emit('button', { level: level, state: (level==0) });
+    }
+  }, 1000)
 });

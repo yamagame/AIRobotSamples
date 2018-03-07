@@ -71,6 +71,8 @@ function chat(message, context, tone, callback) {
 
 speech.recording = false;
 
+var last_led_action = null;
+
 function servoAction(action, direction, callback) {
   const client = dgram.createSocket('udp4');
   var done = false;
@@ -134,6 +136,7 @@ function docomo_chat(payload, callback) {
       } else {
         if (led_mode == 'auto') {
           servoAction('led-off');
+          last_led_action = 'led-off';
         }
         servoAction('talk', payload.direction, () => {
           talk.voice = payload.voice;
@@ -167,6 +170,7 @@ function text_to_speech(payload, callback) {
       playing = true;
       if (led_mode == 'auto') {
         servoAction('led-off');
+        last_led_action = 'led-off';
       }
       servoAction('talk', payload.direction, () => {
         talk.play(payload.message, {
@@ -208,6 +212,7 @@ function speech_to_text(payload, callback) {
         if (callback) callback(null, '[timeout]');
         if (led_mode == 'auto') {
           servoAction('led-off');
+          last_led_action = 'led-off';
         }
       }
       done = true;
@@ -223,6 +228,7 @@ function speech_to_text(payload, callback) {
       if (callback) callback(null, data);
       if (led_mode == 'auto') {
         servoAction('led-off');
+        last_led_action = 'led-off';
       }
     }
     done = true;
@@ -239,6 +245,7 @@ function speech_to_text(payload, callback) {
       if (callback) callback(null, retval);
       if (led_mode == 'auto') {
         servoAction('led-off');
+        last_led_action = 'led-off';
       }
     }
     done = true;
@@ -252,6 +259,7 @@ function speech_to_text(payload, callback) {
         if (callback) callback(null, '[canceled]');
         if (led_mode == 'auto') {
           servoAction('led-off');
+          last_led_action = 'led-off';
         }
       }
       done = true;
@@ -265,6 +273,7 @@ function speech_to_text(payload, callback) {
       if (callback) callback(null, data);
       if (led_mode == 'auto') {
         servoAction('led-off');
+        last_led_action = 'led-off';
       }
     }
     done = true;
@@ -273,8 +282,10 @@ function speech_to_text(payload, callback) {
   if (led_mode == 'auto') {
     if (payload.timeout > 0) {
         servoAction('led-on');
+        last_led_action = 'led-on';
     } else {
         servoAction('led-off');
+        last_led_action = 'led-off';
     }
   }
 
@@ -405,14 +416,17 @@ function changeLed(payload) {
   if (payload.action === 'off') {
     led_mode = 'manual';
     servoAction('led-off');
+    last_led_action = 'led-off';
   }
   if (payload.action === 'on') {
     led_mode = 'manual';
     servoAction('led-on');
+    last_led_action = 'led-on';
   }
   if (payload.action === 'blink') {
     led_mode = 'manual';
     servoAction('led-blink');
+    last_led_action = 'led-blink';
   }
 }
 
@@ -695,8 +709,53 @@ const gpioSocket = (function() {
   return io('http://localhost:3091');
 })();
 
+var shutdownTimer = null;
+var shutdownLEDTimer = null;
+var doShutdown = false;
+
 gpioSocket.on('button', (payload) => {
-  speech.emit('button', payload.state);
+  console.log(payload);
+  if (shutdownTimer) {
+    clearTimeout(shutdownTimer);
+    shutdownTimer = null;
+  }
+  if (shutdownLEDTimer) {
+    clearTimeout(shutdownLEDTimer);
+    shutdownLEDTimer = null;
+  }
+  if (payload.state) {
+    if (shutdownTimer) clearTimeout(shutdownTimer);
+    shutdownTimer = setTimeout(() => {
+      gpioSocket.emit('led-command', { action: 'power' });
+      //さらに５秒間押し続け
+      if (shutdownLEDTimer) {
+        clearTimeout(shutdownLEDTimer);
+        shutdownLEDTimer = null;
+      }
+      shutdownLEDTimer = setTimeout(() => {
+        gpioSocket.emit('led-command', { action: 'on' });
+        //シャットダウン
+        doShutdown = true;
+        servoAction('stop');
+        setTimeout(() => {
+          const _playone = spawn('/usr/bin/sudo', ['shutdown', 'now']);
+          _playone.on('close', function(code) {
+            console.log('shutdown done');
+          });
+          doShutdown = false;
+        }, 5000)
+      }, 5*1000);
+    }, 5*1000);
+  } else {
+    if (!doShutdown) {
+      if (last_led_action) {
+        servoAction(last_led_action);
+      }
+    }
+  }
+  if (!doShutdown) {
+    speech.emit('button', payload.state);
+  }
 });
 
 const io_client = require('socket.io-client');
