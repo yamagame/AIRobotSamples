@@ -15,6 +15,8 @@ sudo apt-get update && sudo apt-get install google-cloud-sdk -y
 git clone https://github.com/yamagame/AIRobotSamples
 cd AIRobotSamples
 npm i
+# Raspberr Pi Zero Wの場合は，以下のコメントアウトを外すこと
+# npm rebuild --build-from-source grpc
 
 sudo apt-get purge wolfram-engine -y
 sudo apt-get install mecab libmecab-dev mecab-ipadic-utf8 -y
