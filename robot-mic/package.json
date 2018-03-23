@@ -1,0 +1,15 @@
+{
+  "name": "robot-mic",
+  "version": "1.0.0",
+  "description": "mic for corrugated paper robot",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Osamu Miyazawa",
+  "license": "MIT"
+}

@@ -1,6 +1,6 @@
 const EventEmitter = require('events');
 const speech = require('@google-cloud/speech')();
-const mic = require('mic');
+const mic = require('robot-mic');
 const config = require('./config');
 
 function Speech() {
@@ -20,7 +20,7 @@ function Speech() {
   };
 
   if (config.voice_hat) {
-    var device = 'plughw:0,0';
+    var device = 'plughw:1,0';
   } else {
     var device = 'plughw:1,0';
   }
