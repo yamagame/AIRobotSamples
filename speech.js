@@ -20,7 +20,7 @@ function Speech() {
   };
 
   if (config.voice_hat) {
-    var device = 'plughw:1,0';
+    var device = 'plughw:0,0';
   } else {
     var device = 'plughw:1,0';
   }
