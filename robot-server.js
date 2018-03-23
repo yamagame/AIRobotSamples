@@ -71,7 +71,7 @@ function chat(message, context, tone, callback) {
 
 speech.recording = false;
 
-var last_led_action = null;
+var last_led_action = 'led-off';
 
 function servoAction(action, direction, callback) {
   const client = dgram.createSocket('udp4');

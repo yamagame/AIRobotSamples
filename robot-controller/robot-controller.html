@@ -187,64 +187,64 @@
       }
     });
 
-    RED.nodes.registerType('command', {
-      category: 'robot',
-      color: '#6abcea',
-      defaults: {
-        name: { value: "", },
-        command: { value: "", },
-        args: {value: "", },
-      },
-      inputs: 1,
-      outputs: 1,
-      icon: "feed.png",
-      label: function () {
-        return this.name || this.command || this._("command.label.name");
-      }
-    });
+    // RED.nodes.registerType('command', {
+    //   category: 'robot',
+    //   color: '#6abcea',
+    //   defaults: {
+    //     name: { value: "", },
+    //     command: { value: "", },
+    //     args: {value: "", },
+    //   },
+    //   inputs: 1,
+    //   outputs: 1,
+    //   icon: "feed.png",
+    //   label: function () {
+    //     return this.name || this.command || this._("command.label.name");
+    //   }
+    // });
 
-    RED.nodes.registerType('open-slide', {
-      category: 'robot',
-      color: '#6abcea',
-      defaults: {
-        name: { value: "スライドを開く", },
-        args: {value: "", },
-      },
-      inputs: 1,
-      outputs: 1,
-      icon: "feed.png",
-      label: function () {
-        return this.name || this._("open-slide.label.name");
-      }
-    });
+    // RED.nodes.registerType('open-slide', {
+    //   category: 'robot',
+    //   color: '#6abcea',
+    //   defaults: {
+    //     name: { value: "スライドを開く", },
+    //     args: {value: "", },
+    //   },
+    //   inputs: 1,
+    //   outputs: 1,
+    //   icon: "feed.png",
+    //   label: function () {
+    //     return this.name || this._("open-slide.label.name");
+    //   }
+    // });
 
-    RED.nodes.registerType('next-page', {
-      category: 'robot',
-      color: '#6abcea',
-      defaults: {
-        name: { value: "次のページへ", },
-      },
-      inputs: 1,
-      outputs: 1,
-      icon: "feed.png",
-      label: function () {
-        return this.name || this._("next-page.label.name");
-      }
-    });
+    // RED.nodes.registerType('next-page', {
+    //   category: 'robot',
+    //   color: '#6abcea',
+    //   defaults: {
+    //     name: { value: "次のページへ", },
+    //   },
+    //   inputs: 1,
+    //   outputs: 1,
+    //   icon: "feed.png",
+    //   label: function () {
+    //     return this.name || this._("next-page.label.name");
+    //   }
+    // });
 
-    RED.nodes.registerType('close-slide', {
-      category: 'robot',
-      color: '#6abcea',
-      defaults: {
-        name: { value: "スライドを閉じる", },
-      },
-      inputs: 1,
-      outputs: 1,
-      icon: "feed.png",
-      label: function () {
-        return this.name || this._("close-slide.label.name");
-      }
-    });
+    // RED.nodes.registerType('close-slide', {
+    //   category: 'robot',
+    //   color: '#6abcea',
+    //   defaults: {
+    //     name: { value: "スライドを閉じる", },
+    //   },
+    //   inputs: 1,
+    //   outputs: 1,
+    //   icon: "feed.png",
+    //   label: function () {
+    //     return this.name || this._("close-slide.label.name");
+    //   }
+    // });
 
     RED.nodes.registerType('mecab', {
       category: 'robot',
