@@ -5,7 +5,7 @@ sudo apt-get update
 sudo apt-get upgrade -y
 sudo apt-get install npm -y
 sudo npm install n -g
-sudo n latest
+sudo n lts
 sudo npm install npm@latest -g
 
 export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)"
@@ -16,13 +16,17 @@ git clone https://github.com/yamagame/AIRobotSamples
 cd AIRobotSamples
 npm i
 
+# Raspberr Pi Zero Wの場合は，以下のコメントアウトを外すこと
+# npm rebuild --build-from-source grpc
+
 sudo apt-get purge wolfram-engine -y
 sudo apt-get install mecab libmecab-dev mecab-ipadic-utf8 -y
 sudo apt-get install ibus-anthy -y
-sudo apt-get install python-picamera
-sudo apt-get install evince -y
 
-pip3 install python3-xlib
-pip3 install pyautogui
+# sudo apt-get install python-picamera
+# sudo apt-get install evince -y
+
+# pip3 install python3-xlib
+# pip3 install pyautogui
 
 sudo rpi-update
