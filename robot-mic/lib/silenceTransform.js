@@ -11,7 +11,17 @@ function IsSilence(options) {
     var consecSilenceCount = 0;
     var numSilenceFramesExitThresh = 0;
 
+    // マイクの音声認識の閾値の初期設定
     that.silent_threshold = 2000;
+
+    // マイクの音声認識の閾値を変更する
+    that.changeSilentThreshold = function changeSilentThreshold(threshold) {
+	threshold = Number(threshold);
+	if (threshold > 0) {
+            that.silent_threshold = threshold;
+	}
+	return;
+    }
 
     that.getNumSilenceFramesExitThresh = function getNumSilenceFramesExitThresh() {
         return numSilenceFramesExitThresh;
@@ -57,8 +67,9 @@ IsSilence.prototype._transform = function(chunk, encoding, callback) {
                 speechSample = chunk[i+1] * 256;
             }
             speechSample += chunk[i];
-
+            
             if(Math.abs(speechSample) > self.silent_threshold) {
+		console.log("silent_threshold:", self.silent_threshold);
                 if (debug) {
                   console.log("Found speech block");
                 }

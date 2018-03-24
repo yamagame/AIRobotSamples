@@ -36,6 +36,11 @@ function Speech() {
   var recognizeStream = null;
   var startTime = 0;
 
+  // マイクの音声認識の閾値を変更
+  t.on('mic_threshold', function (threshold) {
+      micInputStream.changeSilentThreshold(threshold);
+  });
+
   micInputStream.on('data', function (data) {
     if (micInputStream.incrConsecSilenceCount() > micInputStream.getNumSilenceFramesExitThresh()) {
       if (recognizeStream) {
