@@ -19,7 +19,7 @@ function Speech() {
     interimResults: false // If you want interim results, set this to true
   };
 
-  if (config.voice_hat) {
+  if (config.voice_hat == true && config.usb_mic == false) {
     var device = 'plughw:0,0';
   } else {
     var device = 'plughw:1,0';
