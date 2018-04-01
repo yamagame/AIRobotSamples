@@ -14,5 +14,6 @@ module.exports = {
     targetId: 'AIRobot000',
     clientId: 'AIRobot000',
   },
-  voice_hat: false,
+  voice_hat: true,
+  usb_mic:   false,
 }
