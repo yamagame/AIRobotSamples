@@ -2,10 +2,11 @@ const io = require('socket.io-client');
 const EventEmitter = require('events');
 const player = require('./movie-player');
 const path = require('path');
+const ping = require('ping');
 
 const host = process.argv[2] || 'localhost';
 
-function MovieClient() {
+function MovieClient(host) {
   var t = new EventEmitter();
 
   const socket = io(`http://${host}:3090/player`);
@@ -37,5 +38,23 @@ function MovieClient() {
 module.exports = MovieClient;
 
 if (require.main === module) {
-  const t = MovieClient();
+  function ipResolver(host, callback) {
+    function _resolve() {
+      ping.promise.probe(host)
+      .then(function (res) {
+        if (res.alive) {
+          callback(res);
+        } else {
+          setTimeout(() => {
+            _resolve()
+          }, 1000);
+        }
+      });
+    }
+    _resolve();
+  }
+  ipResolver(host, (res) => {
+    console.log(`start movie clinet ${res.numeric_host}`);
+    const t = MovieClient(host);
+  })
 }
