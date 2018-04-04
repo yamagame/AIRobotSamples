@@ -67,9 +67,9 @@ IsSilence.prototype._transform = function(chunk, encoding, callback) {
                 speechSample = chunk[i+1] * 256;
             }
             speechSample += chunk[i];
-            
+
             if(Math.abs(speechSample) > self.silent_threshold) {
-		console.log("silent_threshold:", self.silent_threshold);
+		// console.log("mic_silent_threshold:", self.silent_threshold);
                 if (debug) {
                   console.log("Found speech block");
                 }
