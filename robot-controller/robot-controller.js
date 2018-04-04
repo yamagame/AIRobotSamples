@@ -686,7 +686,6 @@ module.exports = function(RED) {
     RED.nodes.createNode(this,config);
     var node = this;
     var param = {};
-    params = getParams(params, config);
     if (typeof config.timeout !== 'undefined') {
       param.timeout = config.timeout;
     }
