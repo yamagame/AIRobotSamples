@@ -9,7 +9,7 @@
     "body-parser": "^1.18.2",
     "express": "^4.16.2",
     "mecab-async": "^0.1.2",
-    "mic": "^2.1.2",
+    "mic": "git+https://github.com/yamagame/mic.git",
     "mustache": "^2.3.0",
     "ping": "^0.2.2",
     "ps-tree": "^1.1.0",

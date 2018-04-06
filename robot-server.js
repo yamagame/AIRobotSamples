@@ -375,6 +375,17 @@ app.post('/debug-speech', (req, res) => {
   res.send('OK');
 });
 
+/* マイクによる音声認識の閾値を変更する
+   閾値が0に近い程マイクの感度は高くなる
+
+   curlコマンド使用例
+   $ curl -X POST --data '200' http://192.168.X.X:3090/mic-threshold
+*/
+app.post('/mic-threshold', (req, res) => {
+  speech.emit('mic_threshold', req.body.toString('utf-8'));
+  res.send('OK');
+})
+
 app.post('/speech', (req, res) => {
   speech.emit('speech', req.body.toString('utf-8'));
   res.send('OK');
