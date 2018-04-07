@@ -442,14 +442,17 @@ function changeLed(payload) {
 }
 
 function execSoundCommand(payload) {
-  const base = `${process.env.HOME}/Sound`;
-  const p = path.normalize(path.join(base, payload.sound));
-  if (p.indexOf(base) == 0) {
-    console.log(`/usr/bin/aplay ${p}`);
-    const _playone = spawn('/usr/bin/aplay', [p]);
-    _playone.on('close', function(code) {
-      console.log('close', code);
-    });
+  const sound = (typeof payload.play !== 'undefined') ? payload.play : payload.sound;
+  if (typeof sound !== 'undefined') {
+    const base = `${process.env.HOME}/Sound`;
+    const p = path.normalize(path.join(base, sound));
+    if (p.indexOf(base) == 0) {
+      console.log(`/usr/bin/aplay ${p}`);
+      const _playone = spawn('/usr/bin/aplay', [p]);
+      _playone.on('close', function(code) {
+        console.log('close', code);
+      });
+    }
   }
 }
 
