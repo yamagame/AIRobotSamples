@@ -198,9 +198,11 @@ class Play {
       }
       const d = cmd.shift().trim();
       const page = d.match('(\\d+)page') || d.match('(\\d+)ページ');
-      var delay = d.match('(\\d+)s') || d.match('(\\d+)秒');
+      // var delay = d.match('(\\d+)s') || d.match('(\\d+)秒');
+      var delay = d.match('(^([1-9]\\d*|0)(\\.\\d+)?)s$') || d.match('(^([1-9]\\d*|0)(\\.\\d+)?)秒$');
       if (delay == null) {
-        delay = d.match('(\\d+)');
+        // delay =  d.match('(\\d+)');
+        delay = d.match('(^([1-9]\\d*|0)(\\.\\d+)?)');
       }
       var speed = d.match('(\\d+)speed') || d.match('(\\d+)スピード');
       if (speed == null) {
@@ -368,7 +370,7 @@ class Play {
         });
       } else
       if (delay !== null) {
-        this.delay(parseInt(delay[1]), (err, res) => {
+        this.delay(parseFloat(delay[1]), (err, res) => {
           if (err) {
             callback(err, 'ERR');
             return;
