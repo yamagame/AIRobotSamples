@@ -577,6 +577,9 @@ module.exports = function(RED) {
     if (typeof config.algorithm !== 'undefined' && config.algorithm !== 'keep') {
       param.algorithm = config.algorithm;
     }
+    if (typeof config.sensitivity !== 'undefined' && config.sensitivity !== 'keep') {
+      param.sensitivity = config.sensitivity;
+    }
     return param;
   }
 
@@ -687,6 +690,9 @@ module.exports = function(RED) {
     var param = {};
     if (typeof config.timeout !== 'undefined') {
       param.timeout = config.timeout;
+    }
+    if (typeof config.sensitivity !== 'undefined') {
+      param.sensitivity = config.sensitivity;
     }
     node.on("input", function(msg) {
       node.recording = true;

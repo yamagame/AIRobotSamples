@@ -197,6 +197,9 @@ function speech_to_text(payload, callback) {
 
   led_mode = 'auto';
 
+  var threshold = payload.threshold;
+  speech.emit('mic_threshold', threshold.toString('utf-8'));
+
   function removeListener() {
     speech.removeListener('data', listener);
     speech.removeListener('speech', speechListener);
@@ -358,6 +361,7 @@ app.post('/speech-to-text', (req, res) => {
 
   speech_to_text({
     timeout: (typeof req.body.payload.timeout === 'undefined') ? 30000 : req.body.payload.timeout,
+    threshold: (typeof req.body.payload.sensitivity === 'undefined') ? 2000 : req.body.payload.sensitivity,
   }, (err, data) => {
     res.send(data);
   });
@@ -393,7 +397,7 @@ app.post('/speech', (req, res) => {
 
 /*
   Google Drive の PDFファイルを Documents フォルダにダウンロードする POST リクエスト
- 
+
   curlコマンド使用例
   curl -X POST -d '{"url":"https://drive.google.com/file/d/[FILE-ID]/view?usp=sharing", "filename":"test.pdf"}' http:/192.168.X.X:3090/download-from-google-drive -H "Content-Type:application/json"
 */
@@ -414,7 +418,7 @@ app.post('/download-from-google-drive', (req, res) => {
       });
     } else {
       res.send(`NG`);
-    } 
+    }
   } catch(err) {
     res.send(`NG`);
   }
@@ -610,6 +614,7 @@ io.on('connection', function (socket) {
     try {
       speech_to_text({
         timeout: (typeof payload.timeout === 'undefined') ? 30000 : payload.timeout,
+        threshold: (typeof payload.sensitivity === 'undefined') ? 2000 : payload.sensitivity,
       }, (err, data) => {
         if (callback) callback(data);
       });

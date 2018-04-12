@@ -28,6 +28,7 @@
       defaults: {
         name: { value: "", },
         timeout: { value: 30000, validate: RED.validators.number() },
+        sensitivity: { value: "keep", required: true, },
       },
       inputs: 1,
       outputs: 2,
@@ -65,6 +66,7 @@
         tone: { value: "keep", required:true, },
         direction: { value: "keep", required: true, },
         algorithm: { value: "keep", required: true, },
+        sensitivity: { value: "keep", required: true, },
       },
       inputs: 1,
       outputs: 1,
@@ -514,6 +516,13 @@
     <label for="node-input-timeout"><i class="icon-tag"></i> <span data-i18n="common.label.timeout"></label>
     <input type="text" id="node-input-timeout" placeholder="Timeout">
   </div>
+  <div class="form-row">
+    <label for="node-input-sensitivity"><i class="icon-tag"></i> <span data-i18n="common.label.sensitivity"></label>
+    <input type="text" id="node-input-sensitivity" list="default" placeholder="Sensitivity">
+    <datalist id="default">
+      <option value="keep" data-i18n="common.label.keep"></option>
+    </datalist>
+  </div>
 </script>
 
 <script type="text/x-red" data-help-name="speech-to-text">
@@ -604,6 +613,13 @@
     <option value="left" data-i18n="common.label.head-left"></option>
     <option value="right" data-i18n="common.label.head-right"></option>
     </select>
+  </div>
+  <div class="form-row">
+    <label for="node-input-sensitivity"><i class="icon-tag"></i> <span data-i18n="common.label.sensitivity"></label>
+    <input type="text" id="node-input-sensitivity" list="default" placeholder="Sensitivity">
+    <datalist id="default">
+      <option value="keep" data-i18n="common.label.keep"></option>
+    </datalist>
   </div>
 </script>
 

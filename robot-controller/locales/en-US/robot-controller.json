@@ -35,7 +35,8 @@
           "repeat": "Repeat",
           "step": "Step",
           "increment": "Increment",
-          "decrement": "Decrement"
+          "decrement": "Decrement",
+          "sensitivity": "Mic Sensitivity"
       }
   },
   "mecab": {
