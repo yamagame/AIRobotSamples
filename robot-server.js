@@ -17,6 +17,8 @@ const quiz_master = process.env.QUIZ_MASTER || '_quiz_master_';
 var context = null;
 var led_mode = 'auto';
 
+talk.dummy = (process.env['SPEECH'] === 'off');
+
 var robotDataPath = process.argv[2] || 'robot-data.json';
 
 const m = function() {
@@ -39,15 +41,45 @@ if (robotJson) {
 if (typeof robotData.quizAnswers === 'undefined') robotData.quizAnswers = {};
 if (typeof robotData.quizEntry === 'undefined') robotData.quizEntry = {};
 if (typeof robotData.quizPayload === 'undefined') robotData.quizPayload = {};
+if (typeof robotData.quizList === 'undefined') robotData.quizList = {};
 
 var saveTimeout = null;
+var savedData = null;
+
+var students = (function() {
+  try {
+    var d = fs.readFileSync('quiz-student.txt');
+    return d.toString().split('\n').map( v => {
+      if (v == '-') {
+        return {
+          name: '-',
+          kana: '',
+        }
+      }
+      const t = v.match(/(.+)\((.+)\)/);
+      if (!t) return null;
+      return {
+        name: t[1].trim(),
+        kana: t[2].trim(),
+      }
+    }).filter( l => {
+      return (l);
+    });
+  } catch(err) {
+  }
+  return [];
+})();
 
 function writeRobotData() {
   if (saveTimeout == null) {
-    saveTimeout = setTimeout(() => {
-      fs.writeFileSync(robotDataPath, JSON.stringify(robotData, null, '  '));
-      saveTimeout = null;
-    }, 1000);
+    const data = JSON.stringify(robotData, null, '  ');
+    if (savedData == null || savedData !== data) {
+      savedData = data;
+      saveTimeout = setTimeout(() => {
+        fs.writeFileSync(robotDataPath, data);
+        saveTimeout = null;
+      }, 1000);
+    }
   }
 }
 
@@ -74,6 +106,10 @@ speech.recording = false;
 var last_led_action = 'led-off';
 
 function servoAction(action, direction, callback) {
+  if (process.env['SPEECH'] === 'off') {
+    if (callback) callback();
+    return;
+  }
   const client = dgram.createSocket('udp4');
   var done = false;
   function response() {
@@ -342,8 +378,8 @@ app.post('/text-to-speech', (req, res) => {
 
   text_to_speech({
     message: req.body.message,
-    speed: payload.speed || null,
-    volume: payload.volume || null,
+    speed: req.body.speed || null,
+    volume: req.body.volume || null,
     direction: req.body.direction || null,
     voice: req.body.voice || null,
     silence: req.body.silence || null,
@@ -375,6 +411,11 @@ app.post('/debug-speech', (req, res) => {
   res.send('OK');
 });
 
+app.post('/speech', (req, res) => {
+  speech.emit('speech', req.body.toString('utf-8'));
+  res.send('OK');
+});
+
 /* マイクによる音声認識の閾値を変更する
    閾値が0に近い程マイクの感度は高くなる
 
@@ -385,11 +426,6 @@ app.post('/mic-threshold', (req, res) => {
   speech.emit('mic_threshold', req.body.toString('utf-8'));
   res.send('OK');
 })
-
-app.post('/speech', (req, res) => {
-  speech.emit('speech', req.body.toString('utf-8'));
-  res.send('OK');
-});
 
 /*
   Google Drive の PDFファイルを Documents フォルダにダウンロードする POST リクエスト
@@ -483,15 +519,59 @@ function quizPacket(payload) {
     return result;
   }
   if (payload.action === 'quiz-init') {
+    //クイズデータの保存
+    if (payload.quizId) {
+      if (!robotData.quizList) {
+        robotData.quizList = {};
+      }
+      if (!robotData.quizList[payload.quizId]) {
+        robotData.quizList[payload.quizId] = {}
+      }
+      if (payload.quizName) {
+        robotData.quizList[payload.quizId].name = payload.quizName;
+      }
+      if (payload.pages) {
+        if (!robotData.quizList[payload.quizId].quiz) {
+          robotData.quizList[payload.quizId].quiz = {}
+        }
+        payload.pages.forEach( page => {
+          if (page.action == 'quiz' && page.question) {
+            robotData.quizList[payload.quizId].quiz[page.question] = {
+              choices: page.choices,
+              answers: page.answers,
+            }
+          }
+        })
+      }
+      writeRobotData();
+    }
     payload.quizStartTime = new Date();
   }
   if (payload.action === 'quiz-ranking') {
     if (typeof payload.quizId !== 'undefined') {
       payload.quizAnswers = robotData.quizAnswers[payload.quizId];
+      //ゲストプレイヤーはランキングから外す
+      const ret = {};
+      Object.keys(payload.quizAnswers).forEach( quizId => {
+        const players = payload.quizAnswers[quizId];
+        ret[quizId] = {}
+        Object.keys(players).forEach( clientId => {
+          const player = players[clientId];
+          if (player.name.indexOf('ゲスト') != 0
+           && player.name.indexOf('guest') != 0
+           && player.name.indexOf('学生講師') != 0) {
+            ret[quizId][clientId] = player;
+          }
+        });
+      });
+      payload.quizAnswers = ret;
     } else {
       payload.quizAnswers = robotData.quizAnswers;
     }
     payload.name = quiz_master;
+  }
+  if (payload.members) {
+    payload.members = students.map( v => v.name );
   }
   return payload;
 }
@@ -512,8 +592,51 @@ function loadQuizPayload(payload)
   } else {
     var val = robotData.quizPayload['others'] || {};
   }
+  val.members = students.map( v => v.name );
   return m(val, { initializeLoad: true, });
 }
+
+app.post('/result', (req, res) => {
+  if (req.body.type === 'answers') {
+    if (req.body.quizId) {
+      const quizAnswers = robotData.quizAnswers[req.body.quizId];
+      if (req.body.startTime) {
+        //スタート時間が同じものだけを返す
+        const result = {};
+        Object.keys(quizAnswers).map( quiz => {
+          const qq = quizAnswers[quiz];
+          const tt = {};
+          Object.keys(qq).forEach( clientId => {
+            const answer = qq[clientId];
+            if (answer.quizStartTime === req.body.startTime) {
+              tt[clientId] = answer;
+            }
+          });
+          if (Object.keys(tt).length > 0) {
+            result[quiz] = tt;
+          }
+        });
+        const question = (robotData.quizList) ? robotData.quizList[req.body.quizId] : null;
+        res.send({ answers: result, question: question });
+      } else {
+        //スタート時間のリストを返す
+        const result = {};
+        Object.keys(quizAnswers).map( quiz => {
+          const qq = quizAnswers[quiz];
+          Object.keys(qq).forEach( clientId => {
+            result[qq[clientId].quizStartTime] = true;
+          })
+        })
+        res.send({ startTimes: Object.keys(result) });
+      }
+    } else {
+      //クイズIDを返す
+      res.send({ quizIds: Object.keys(robotData.quizAnswers)})
+    }
+    return;
+  }
+  res.send({ status: 'OK' });
+})
 
 app.post('/command', (req, res) => {
   if (req.body.type === 'quiz') {
@@ -548,7 +671,7 @@ app.post('/command', (req, res) => {
   if (req.body.type === 'sound') {
     execSoundCommand(req.body);
   }
-  res.send('OK');
+  res.send({ status: 'OK' });
 })
 
 const server = require('http').Server(app);

@@ -9,6 +9,7 @@ function Talk() {
 	t.voice = 'reimu';
 	t.speed = 95;
 	t.volume = 80;
+	t.dummy = false;
 
   t.say = function(words, params, callback) {
   	const voice = params.voice;
@@ -26,17 +27,21 @@ function Talk() {
   			return;
   		}
       console.log(cont);
-  		if (voice == 'marisa') {
-  			const _playone = spawn(path.join(__dirname,'talk-f2.sh'), [`-s`, speed, `-g`, volume, `　${cont}`]);
-  			_playone.on('close', function(code) {
-  				playone();
-  			});
-  		} else {
-  			const _playone = spawn(path.join(__dirname,'talk-f1.sh'), [`-s`, speed, `-g`, volume, `　${cont}`]);
-  			_playone.on('close', function(code) {
-  				playone();
-  			});
-  		}
+			if (this.dummy) {
+				playone();
+			} else {
+				if (voice == 'marisa') {
+					const _playone = spawn(path.join(__dirname,'talk-f2.sh'), [`-s`, speed, `-g`, volume, `　${cont}`]);
+					_playone.on('close', function(code) {
+						playone();
+					});
+				} else {
+					const _playone = spawn(path.join(__dirname,'talk-f1.sh'), [`-s`, speed, `-g`, volume, `　${cont}`]);
+					_playone.on('close', function(code) {
+						playone();
+					});
+				}
+			}
     }
     playone();
   }

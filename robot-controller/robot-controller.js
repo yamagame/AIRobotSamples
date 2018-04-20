@@ -401,7 +401,7 @@ class Play {
           if (msg == '') {
           } else {
             if (params.silence) {
-              callback(err, msg);
+              callback(null, msg);
             } else {
               this.textToSpeech(node, msg, host, params, (err, res) => {
                 callback(err, msg);
@@ -434,7 +434,7 @@ class Play {
           if (msg == '') {
           } else {
             if (params.silence) {
-              callback(err, msg);
+              callback(null, msg);
             } else {
               this.textToSpeech(node, msg, host, params, (err, res) => {
                 callback(err, msg);
@@ -466,7 +466,7 @@ class Play {
           if (msg == '') {
           } else {
             if (params.silence) {
-              callback(err, msg);
+              callback(null, msg);
             } else {
               this.textToSpeech(node, msg, host, params, (err, res) => {
                 callback(err, msg);

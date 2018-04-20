@@ -15,3 +15,5 @@ yarn-error.log*
 package-lock.json
 public/
 robot-data.json
+
+quiz-student.txt
