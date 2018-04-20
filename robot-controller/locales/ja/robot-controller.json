@@ -35,7 +35,8 @@
           "repeat": "繰り返し",
           "step": "ステップ",
           "increment": "増やす",
-          "decrement": "減らす"
+          "decrement": "減らす",
+          "sensitivity": "マイク感度"
       }
   },
   "mecab": {
