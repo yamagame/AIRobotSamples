@@ -188,7 +188,13 @@ class Play {
     const { robotHost } = msg;
     const host = robotHost;
     this.host = host;
-    const messages = this.getMessage(params.message);
+    const messages = this.getMessage(params.message).filter( line => {
+      //コメント
+      if (line.length > 0) {
+        return (line[0].indexOf('//') != 0)
+      }
+      return false;
+    });
     var cmd = [];
 
     const doCmd = (callback) => {

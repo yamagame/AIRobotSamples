@@ -11,6 +11,8 @@ const { exec, spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const buttonClient = require('./button-client')();
+const HOME = (process.platform === 'darwin') ? path.join(process.env.HOME, 'Documents', 'AIRobot') : process.env.HOME;
+const mkdirp = require('mkdirp');
 
 const quiz_master = process.env.QUIZ_MASTER || '_quiz_master_';
 
@@ -448,7 +450,7 @@ app.post('/download-from-google-drive', (req, res) => {
         s.filename = path.basename(s.filename);
       }
       const url = `https://drive.google.com/uc?export=download&id=${m[1]}`;
-      const _download = spawn('/usr/bin/curl', [`-o`, path.join(process.env.HOME, 'Documents', s.filename), `-L`, `${url}`]);
+      const _download = spawn('/usr/bin/curl', [`-o`, path.join(HOME, 'Documents', s.filename), `-L`, `${url}`]);
       _download.on('close', function(code) {
         res.send(`${s.filename}`);
       });
@@ -484,7 +486,7 @@ function changeLed(payload) {
 function execSoundCommand(payload) {
   const sound = (typeof payload.play !== 'undefined') ? payload.play : payload.sound;
   if (typeof sound !== 'undefined') {
-    const base = `${process.env.HOME}/Sound`;
+    const base = `${HOME}/Sound`;
     const p = path.normalize(path.join(base, sound));
     if (p.indexOf(base) == 0) {
       console.log(`/usr/bin/aplay ${p}`);
@@ -556,18 +558,22 @@ function quizPacket(payload) {
       payload.quizAnswers = robotData.quizAnswers[payload.quizId];
       //ゲストプレイヤーはランキングから外す
       const ret = {};
-      Object.keys(payload.quizAnswers).forEach( quizId => {
-        const players = payload.quizAnswers[quizId];
-        ret[quizId] = {}
-        Object.keys(players).forEach( clientId => {
-          const player = players[clientId];
-          if (player.name.indexOf('ゲスト') != 0
-           && player.name.indexOf('guest') != 0
-           && player.name.indexOf('学生講師') != 0) {
-            ret[quizId][clientId] = player;
+      if (payload.quizAnswers) {
+        Object.keys(payload.quizAnswers).forEach( quizId => {
+          const players = payload.quizAnswers[quizId];
+          ret[quizId] = {}
+          if (players) {
+            Object.keys(players).forEach( clientId => {
+              const player = players[clientId];
+              if (player.name.indexOf('ゲスト') != 0
+              && player.name.indexOf('guest') != 0
+              && player.name.indexOf('学生講師') != 0) {
+                ret[quizId][clientId] = player;
+              }
+            });
           }
         });
-      });
+      }
       payload.quizAnswers = ret;
     } else {
       payload.quizAnswers = robotData.quizAnswers;
@@ -676,6 +682,51 @@ app.post('/command', (req, res) => {
     execSoundCommand(req.body);
   }
   res.send({ status: 'OK' });
+})
+
+app.post('/scenario', (req, res) => {
+  const base = `${HOME}/Documents`;
+  const username = (req.body.name) ? path.basename(req.body.name) : null;
+  const filename = (req.body.filename) ? path.basename(req.body.filename) : null;
+  if (students.some( m => m.name === username )) {
+    if (req.body.action == 'save') {
+      if (typeof req.body.text !== 'undefined') {
+        if (filename) {
+          mkdirp(path.join(base, username), function(err) {
+            fs.writeFile(path.join(base, username, filename), req.body.text, (err) => {
+              res.send({ status: (!err) ? 'OK' : err.code, });
+            });
+          });
+        } else {
+          res.send({ status: 'Not found filename', });
+        }
+      } else {
+        res.send({ status: 'No data', });
+      }
+    } else
+    if (req.body.action == 'load') {
+      if (filename) {
+        mkdirp(path.join(base, username), function(err) {
+          fs.readFile(path.join(base, username, filename), (err, data) => {
+            res.send({ status: (!err) ? 'OK' : err.code, text: (data) ? data.toString() : '', });
+          });
+        });
+      } else {
+        res.send({ status: 'Not found filename', });
+      }
+    } else
+    if (req.body.action == 'list') {
+      mkdirp(path.join(base, username), function(err) {
+        fs.readdir(path.join(base, username), (err, items) => {
+          res.send({ status: (!err) ? 'OK' : err.code, items: items.filter( v => v.indexOf('.') !== 0 ), });
+        });
+      });
+    } else {
+      res.send({ status: 'OK' });
+    }
+  } else {
+    res.send({ status: `No name: ${username}` });
+  }
 })
 
 const server = require('http').Server(app);
