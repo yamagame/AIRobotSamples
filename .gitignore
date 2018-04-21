@@ -13,7 +13,8 @@ yarn-debug.log*
 yarn-error.log*
 
 package-lock.json
-public/
+# public/
 robot-data.json
 
 quiz-student.txt
+*.map

@@ -12,6 +12,7 @@ const path = require('path');
 const fs = require('fs');
 const buttonClient = require('./button-client')();
 const HOME = (process.platform === 'darwin') ? path.join(process.env.HOME, 'Documents', 'AIRobot') : process.env.HOME;
+const PICT = (process.platform === 'darwin') ? path.join(process.env.HOME, 'Pictures', 'AIRobot') : path.join(process.env.HOME, 'Pictures');
 const mkdirp = require('mkdirp');
 
 const quiz_master = process.env.QUIZ_MASTER || '_quiz_master_';
@@ -151,6 +152,7 @@ app.use(bodyParser.json({ type: 'application/json' }))
 app.use(bodyParser.raw({ type: 'application/*' }))
 
 app.use(express.static('public'))
+app.use('/images', express.static(PICT))
 
 function docomo_chat(payload, callback) {
   if (payload.tone == 'kansai_dialect') {
