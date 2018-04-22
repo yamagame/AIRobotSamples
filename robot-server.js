@@ -20,7 +20,8 @@ const quiz_master = process.env.QUIZ_MASTER || '_quiz_master_';
 var context = null;
 var led_mode = 'auto';
 
-talk.dummy = (process.env['SPEECH'] === 'off');
+talk.dummy = (process.env['SPEECH'] === 'off' && process.env['MACINTOSH'] !== 'on');
+talk.macvoice = (process.env['MACINTOSH'] === 'on');
 
 var robotDataPath = process.argv[2] || 'robot-data.json';
 
