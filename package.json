@@ -24,6 +24,7 @@
   "scripts": {
     "robot": "node robot-server.js",
     "robot-dev": "SPEECH=off node robot-server.js",
+    "macintosh": "SPEECH=off MACINTOSH=on node robot-server.js",
     "button": "./button-server.sh",
     "servo": "sudo node servo-head.js",
     "test": "echo \"Error: no test specified\" && exit 1"
