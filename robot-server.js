@@ -1,7 +1,7 @@
 const EventEmitter = require('events');
 const express = require('express')
 const bodyParser = require('body-parser')
-const request = require('request');
+const request = require('request-promise');
 const speech = (() => (process.env['SPEECH'] === 'off') ? (new EventEmitter()) : require('./speech'))();
 const talk = require('./talk');
 const dgram = require('dgram');
@@ -14,6 +14,41 @@ const buttonClient = require('./button-client')();
 const HOME = (process.platform === 'darwin') ? path.join(process.env.HOME, 'Documents', 'AIRobot') : process.env.HOME;
 const PICT = (process.platform === 'darwin') ? path.join(process.env.HOME, 'Pictures', 'AIRobot') : path.join(process.env.HOME, 'Pictures');
 const mkdirp = require('mkdirp');
+const Dora = require('dora');
+const dora = new Dora();
+
+dora.request = async function(command, options, params) {
+  var len = 0;
+  if (typeof command !== 'undefined') len += 1;
+  if (typeof options !== 'undefined') len += 1;
+  if (typeof params !== 'undefined') len += 1;
+  if (len <= 0) {
+    throw new Error('Illegal arguments.');
+  }
+  const opt = {
+    method: 'POST',
+    restype: 'json',
+  }
+  if (len == 1) {
+    params = command;
+    command = 'command';
+  }
+  if (len == 2) {
+    params = options;
+  }
+  if (options) {
+    if (options.method) opt.method = options.method;
+    if (options.restype) opt.restype = options.restype;
+  }
+  const body = await request({
+    uri: `http://localhost:3090/${command}`,
+    method: opt.method,
+    body: params,
+    json: true,
+  });
+  console.log(body);
+  return body;
+}
 
 const quiz_master = process.env.QUIZ_MASTER || '_quiz_master_';
 
@@ -684,6 +719,69 @@ app.post('/command', (req, res) => {
   if (req.body.type === 'sound') {
     execSoundCommand(req.body);
   }
+  if (req.body.type === 'scenario') {
+    const { action } = req.body;
+    if (action == 'play') {
+      dora.stop();
+      function emitError(err) {
+        console.log(err);
+        console.log(dora.errorInfo());
+        err.info = dora.errorInfo();
+        if (!err.info.reason) {
+          err.info.reason = err.toString();
+        }
+        io.emit('scenario_status', {
+          err: err.toString(),
+          lineNumber: err.info.lineNumber,
+          code: err.info.code,
+          reason: err.info.reason,
+        });
+      }
+      try {
+        const { filename, range, name } = req.body;
+        const base = `${HOME}/Documents`;
+        const username = (name) ? path.basename(name) : null;
+        fs.readFile(path.join(base, username, filename), (err, data) => {
+          if (err) {
+            emitError(err);
+            return;
+          }
+          dora.parse(data.toString(), function (filename, callback) {
+            fs.readFile(path.join(base, username, filename), (err, data) => {
+              if (err) {
+                emitError(err);
+                return;
+              }
+              callback(data.toString());
+            });
+          }).then(()=> {
+            dora.play({}, {
+              socket: localSocket,
+              range,
+            }, (err, msg) => {
+              if (err) {
+                emitError(err);
+                console.log(`${err.info.lineNumber}行目でエラーが発生しました。\n\n${err.info.code}\n\n${err.info.reason}`);
+              } else {
+                io.emit('scenario_status', {
+                  message: msg,
+                });
+                console.log(msg);
+              }
+            });
+          }).catch((err) => {
+            emitError(err);
+          });
+        });
+      } catch(err) {
+        emitError(err);
+      }
+    }
+    if (action == 'stop') {
+      dora.stop();
+      speech.emit('data', 'stoped');
+    }
+  }
   res.send({ status: 'OK' });
 })
 
@@ -691,7 +789,8 @@ app.post('/scenario', (req, res) => {
   const base = `${HOME}/Documents`;
   const username = (req.body.name) ? path.basename(req.body.name) : null;
   const filename = (req.body.filename) ? path.basename(req.body.filename) : null;
-  if (students.some( m => m.name === username )) {
+  if (students.some( m => m.name === username ) || config.free_editor) 
+  {
     if (req.body.action == 'save') {
       if (typeof req.body.text !== 'undefined') {
         if (filename) {
@@ -954,13 +1053,9 @@ gpioSocket.on('button', (payload) => {
   }
 });
 
-const io_client = require('socket.io-client');
-const client_socket = io_client('http://localhost:4010');
+const ioClient = require('socket.io-client');
+const localSocket = ioClient('http://localhost:3090');
 
-client_socket.on('connect', () => {
+localSocket.on('connect', () => {
   console.log('connected');
-});
-
-client_socket.on('sheet', (sheetData) => {
-  io.emit('sheet', { sheet: sheetData });
 });
