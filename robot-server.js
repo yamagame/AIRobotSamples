@@ -714,6 +714,7 @@ app.post('/command', (req, res) => {
       return;
     } else {
       res.send({ state: 'none' });
+      return;
     }
   }
   if (req.body.type === 'sound') {
@@ -779,7 +780,13 @@ app.post('/command', (req, res) => {
     }
     if (action == 'stop') {
       dora.stop();
+      //talk.stop();
+      //servoAction('idle');
       speech.emit('data', 'stoped');
+      if (playerSocket) {
+        playerSocket.emit('movie', { action: 'cancel', }, (data) => {
+        });
+      }
     }
   }
   res.send({ status: 'OK' });

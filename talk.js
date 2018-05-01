@@ -94,6 +94,9 @@ function Talk() {
 		}
 	}
 
+	t.stop = function() {
+	}
+
 	t.flush = function() {
     this.playing = false;
 		this.playQue = [];
